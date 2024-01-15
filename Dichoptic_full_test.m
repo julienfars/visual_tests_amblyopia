@@ -197,7 +197,7 @@ eyelink_clear_screen(var_eye_link,el)
 
 DIM_Screen_hor = windowRect(3)/global_param.screen_size(2); % we get the number of pixels per mm
 DIM_Screen_ver = windowRect(4)/global_param.screen_size(1);
-SIZE = 1; %in dva
+%SIZE = 1; %in dva
 SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
 gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
 gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
@@ -225,7 +225,7 @@ contrast_low = 0.8 - ((CONTRAST)*1.414);
 % Set Up how many Gabors there are
 nGabors = 2; 
 
-gap = gaborDimPix+10; % in pixels 
+gap = (gaborDimPix/2); % in pixels 
 
 backgroundOffset = [0.5 0.5 0.5 0.0];
 disableNorm = 1;
@@ -237,7 +237,7 @@ gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix,...
             [], [0.5 0.5 0.5 0.0], 1, 0.5);
         
 xPos = xCenter;
-yPos = ceil(yCenter-(gaborDimPix/2)); % the top gabor
+yPos = ceil(yCenter-(gaborDimPix/2)/2); % the top gabor
 
 % Make the destination rectangles for all the Gabors in the array
 baseRect = [0 0 1 0.5] .* gaborDimPix;
@@ -245,7 +245,7 @@ allRects = nan(4, nGabors);
 allRects(:, 1) = CenterRectOnPointd(baseRect, xPos, yPos);
 allRects(:, 2) = CenterRectOnPointd(baseRect, xPos, yPos+gap);
 
-propertiesMat = repmat([phase, freq, sigma, contrast, aspectRatio, 0, 0, 0],...
+propertiesMat = repmat([phase, freq, sigma, 0, aspectRatio, 0, 0, 0],...
     nGabors, 1);
 
 %% Staircases 
@@ -276,7 +276,6 @@ verbose         = 1;        % set to 1 for verbose staircase output
 sc = staircase(StimLevels, initStepSize, stepSize,         ...
                nRightToDescend, nWrongToAscend, maxNumTrials, ...
                maxNumReversals, startLevel, verbose);
-
 
 %% Result table
 % the final results table is generated here (optimisation reasons)
@@ -318,7 +317,8 @@ mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
             FF2b = FFLb;
     end
 
-
+diff = zeros(4,1);
+rectColor = [1 1 1];
 
 while ~sc.isFinished           % keep looping until staircase concludes
     
@@ -338,7 +338,7 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
     end
 
     % here the code to generate the noise 
-    texSize = 1010; %size in pixels, was 240
+    texSize = 252; %size in pixels, was 240
     %texSize = 4.4 * size_dva; % would be too small 
     %x = meshgrid(-texSize/2+1:texSize/2, -texSize/2+1:texSize/2);
     
@@ -359,7 +359,7 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
     
 % here is the arrows
     % first let's get the size of the noise 
-    sidesize = 390;% was 240
+    sidesize = 240;% was 240, was 390
     dstGab_centerN = [0 0 1 0.5] .* sidesize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
 
@@ -722,7 +722,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Stim_position = Stim_position'; % transpose 
     Stim_position = num2str(Stim_position);
 
-    temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, NOISE, VerCont_low, VerCont_high, value, key, orientation, Stim_position, AMB_EYE, EYE_TEST, rt, datetime('now')};
+    temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, NOISE, contrast_low, contrast_high, value, key, orientation, Stim_position, AMB_EYE, EYE_TEST, rt, datetime('now')};
     
             %here the calculation of the last six reversals
             if sc.trialCount > 1 % only begins after the training trials 
@@ -740,7 +740,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
                 % the mean of reversals is then recorded at the end of the
                 % table
                 %careful not working here, MUST FIX
-                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,VerCont_low, VerCont_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
+                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,contrast_low, contrast_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
             end
                 %here the function for the plot staircase/values (needs to be modified for compatibility with all the tests)
             if sc.isFinished

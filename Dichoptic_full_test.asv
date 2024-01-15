@@ -66,7 +66,7 @@ end
 
 %%%%%%%%% pop-up window 
 prompt_first = {'is this a retest? [true/false]'}; % description of fields
-defaults_first = {string(global_param.Retest)}; % default answer to this field
+defaults_first = string(global_param.Retest); % default answer to this field
 answer_first = inputdlg(prompt_first, 'Parameters',2,defaults_first); % opens dialog window
 retest = answer_first{1,:};
 %%%%%%%%%
@@ -84,7 +84,7 @@ end
 
 %%%%%%%%% pop-up window
 prompt = {'Enter subject number:', 'stimuli size', 'distance from screen', 'Which eye is amblyopic?', 'Noise contrast?', 'contrast discrimination threshold?', 'cut-off frequency', 'edf file name?', "Eye tested"}; %description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.1', num2str(0.55), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
+defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.1', num2str(0.15), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
 answer = inputdlg(prompt, 'Parameters',2,defaults); %opens dialog
 SUBJECT = answer{1,:}; %Gets Subject Name
 SIZE = str2double(answer{2,:}); %Gets size of the stim (0.29 is from the article)
@@ -126,8 +126,8 @@ if ismac % only for testing purposes, check if your system is compatible when do
 elseif isunix % linux platforms are generally fine
     Screen('Preference', 'SkipSyncTests', 0);
 elseif ispc 
-    %oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-    Screen('Preference', 'SkipSyncTests', 0);
+    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
+    %Screen('Preference', 'SkipSyncTests', 0);
 else
     disp('Platform not supported')
     return
@@ -197,7 +197,7 @@ eyelink_clear_screen(var_eye_link,el)
 
 DIM_Screen_hor = windowRect(3)/global_param.screen_size(2); % we get the number of pixels per mm
 DIM_Screen_ver = windowRect(4)/global_param.screen_size(1);
-SIZE = 1; %in dva
+%SIZE = 1; %in dva
 SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
 gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
 gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
@@ -225,7 +225,7 @@ contrast_low = 0.8 - ((CONTRAST)*1.414);
 % Set Up how many Gabors there are
 nGabors = 2; 
 
-gap = gaborDimPix+10; % in pixels 
+gap = (gaborDimPix/2); % in pixels 
 
 backgroundOffset = [0.5 0.5 0.5 0.0];
 disableNorm = 1;
@@ -237,7 +237,7 @@ gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix,...
             [], [0.5 0.5 0.5 0.0], 1, 0.5);
         
 xPos = xCenter;
-yPos = ceil(yCenter-(gaborDimPix/2)); % the top gabor
+yPos = ceil(yCenter-(gaborDimPix/2)/2); % the top gabor
 
 % Make the destination rectangles for all the Gabors in the array
 baseRect = [0 0 1 0.5] .* gaborDimPix;
@@ -245,7 +245,7 @@ allRects = nan(4, nGabors);
 allRects(:, 1) = CenterRectOnPointd(baseRect, xPos, yPos);
 allRects(:, 2) = CenterRectOnPointd(baseRect, xPos, yPos+gap);
 
-propertiesMat = repmat([phase, freq, sigma, contrast, aspectRatio, 0, 0, 0],...
+propertiesMat = repmat([phase, freq, sigma, 0, aspectRatio, 0, 0, 0],...
     nGabors, 1);
 
 %% Staircases 
@@ -301,11 +301,31 @@ mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
  repeatNoise = false; % used for repeating the same noise when having attention trial (UP/DOWN)
  att_test = 0; % counter for the numbers of attention tests failed 
  doubleScreen = false;
+    % will determine which side of the crosses will be moving (along with one copy of the fusion frame)
+    if contains(AMB_EYE, 'Left') 
+            HC1 = HCl;
+            HC2 = HCr;
+            FF1w = FFLw;
+            FF1b = FFLb;
+            FF2w = FFRw;
+            FF2b = FFRb;
+        else
+            HC1 = HCr;
+            HC2 = HCl;
+            FF1w = FFRw;
+            FF1b = FFRb;
+            FF2w = FFLw;
+            FF2b = FFLb;
+    end
+
+diff = zeros(4,1);
+rectColor = [1 1 1];
+
 while ~sc.isFinished           % keep looping until staircase concludes
     
 % run the fixing cross before the trial
    [HC1,HC2, FF1w, FF1b, FF2w, FF2b] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
+doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi);
 
     StimLevel = sc.curLevel;                   % testing level from staircase
     linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
@@ -319,7 +339,7 @@ doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
     end
 
     % here the code to generate the noise 
-    texSize = 1010; %size in pixels, was 240
+    texSize = 240; %size in pixels, was 240
     %texSize = 4.4 * size_dva; % would be too small 
     %x = meshgrid(-texSize/2+1:texSize/2, -texSize/2+1:texSize/2);
     
@@ -481,7 +501,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1); % was 500
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3); % was 500
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
 
@@ -516,8 +536,10 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     %dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-
+    %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
+    % Batch draw the 2 Gabors to screen
+            Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
+                [], [], [], [], kPsychDontDoRotation, propertiesMat');
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
@@ -525,7 +547,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1);
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3);
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
     Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
@@ -559,7 +581,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1); %was 500
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3); %was 500
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
     Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
@@ -596,7 +618,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1);
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3);
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
     Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
@@ -701,7 +723,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Stim_position = Stim_position'; % transpose 
     Stim_position = num2str(Stim_position);
 
-    temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, NOISE, VerCont_low, VerCont_high, value, key, orientation, Stim_position, AMB_EYE, EYE_TEST, rt, datetime('now')};
+    temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, NOISE, contrast_low, contrast_high, value, key, orientation, Stim_position, AMB_EYE, EYE_TEST, rt, datetime('now')};
     
             %here the calculation of the last six reversals
             if sc.trialCount > 1 % only begins after the training trials 
@@ -719,7 +741,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
                 % the mean of reversals is then recorded at the end of the
                 % table
                 %careful not working here, MUST FIX
-                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,VerCont_low, VerCont_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
+                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,contrast_low, contrast_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
             end
                 %here the function for the plot staircase/values (needs to be modified for compatibility with all the tests)
             if sc.isFinished
