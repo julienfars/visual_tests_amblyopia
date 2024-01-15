@@ -12,12 +12,12 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereo)
 
 %careful, use the 4,4 x 4,4 dva instead of pixels (will look too lengthy and not large enough otherwise)
 if fixCross == true 
-    if stereo == 100
+    if stereo == 101
         length = 552;
         height = 276;
     else
-        height = 552;
-        length = 276;
+        height = 276;
+        length = 552;
     end
 else
         length = 552;

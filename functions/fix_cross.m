@@ -1,5 +1,5 @@
-function [HC1,HC2, FF1w, FF1b, FF2w, FF2b] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi)
+function [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
+doubleScreen, AMB_EYE,HC1,HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi)
 
 %FIX_CROSS Summary 
 %   This function is running the fix cross. The same kind of step is done
@@ -8,22 +8,6 @@ doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, 
 %   trial. 
 % Define black and white
 
-% will determine which side of the crosses will be moving (along with one copy of the fusion frame)
-    if contains(AMB_EYE, 'Left') 
-            HC1 = HCl;
-            HC2 = HCr;
-            FF1w = FFLw;
-            FF1b = FFLb;
-            FF2w = FFRw;
-            FF2b = FFRb;
-        else
-            HC1 = HCr;
-            HC2 = HCl;
-            FF1w = FFRw;
-            FF1b = FFRb;
-            FF2w = FFLw;
-            FF2b = FFLb;
-    end
 
 
     while fixCross == true

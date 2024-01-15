@@ -66,7 +66,7 @@ end
 
 %%%%%%%%% pop-up window 
 prompt_first = {'is this a retest? [true/false]'}; % description of fields
-defaults_first = {string(global_param.Retest)}; % default answer to this field
+defaults_first = string(global_param.Retest); % default answer to this field
 answer_first = inputdlg(prompt_first, 'Parameters',2,defaults_first); % opens dialog window
 retest = answer_first{1,:};
 %%%%%%%%%
@@ -84,7 +84,7 @@ end
 
 %%%%%%%%% pop-up window
 prompt = {'Enter subject number:', 'stimuli size', 'distance from screen', 'Which eye is amblyopic?', 'Noise contrast?', 'contrast discrimination threshold?', 'cut-off frequency', 'edf file name?', "Eye tested"}; %description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.1', num2str(0.55), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
+defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.1', num2str(0.15), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
 answer = inputdlg(prompt, 'Parameters',2,defaults); %opens dialog
 SUBJECT = answer{1,:}; %Gets Subject Name
 SIZE = str2double(answer{2,:}); %Gets size of the stim (0.29 is from the article)
@@ -126,8 +126,8 @@ if ismac % only for testing purposes, check if your system is compatible when do
 elseif isunix % linux platforms are generally fine
     Screen('Preference', 'SkipSyncTests', 0);
 elseif ispc 
-    %oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-    Screen('Preference', 'SkipSyncTests', 0);
+    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
+    %Screen('Preference', 'SkipSyncTests', 0);
 else
     disp('Platform not supported')
     return
@@ -197,42 +197,56 @@ eyelink_clear_screen(var_eye_link,el)
 
 DIM_Screen_hor = windowRect(3)/global_param.screen_size(2); % we get the number of pixels per mm
 DIM_Screen_ver = windowRect(4)/global_param.screen_size(1);
+SIZE = 1; %in dva
 SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
-
-pix_size = 1/DIM_Screen_ver; % the size of 1 pixel in cm 
-size_stim_pix = round(2*DISTANCE*tand(SIZE/2)/pix_size); % size of the stim in pixels, we round it so it is easier to display
-
-E_min_size_dva = 1;
-size_dva = 2*DISTANCE*tand(E_min_size_dva/2)/pix_size;
+gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
+gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
+gaborDimPix = round((max([gaborDimPix1 gaborDimPix2])+min([gaborDimPix1 gaborDimPix2]))/2); % we round it so we can keep a regular dva 
 
 distance = 1500; 
-PixelPerDeg=1/atand(1/DIM_Screen_hor/DISTANCE); % horizontal size in pix
-frequency = 0.3/CUTOFF; % inverse of the cutoff multiplied by 30% (see liu et al papers for more informations) 
+PixelPerDeg=gaborDimPix/SIZE; % horizontal size in pix
 
-lamda=1/frequency;
-gaborDimPix2=ceil((frequency/3)*15*lamda*size_dva);   
-gaborDimPix1=ceil((frequency/3)*15*lamda*size_dva);  % was ceil((frequency/3)*15*lamda*PixelPerDeg)
+%frequency = 0.3/CUTOFF; % inverse of the cutoff multiplied by 30% (see liu et al papers for more informations) 
 
-%142 to 225 = 83 = 1.13 dva
-phase=90;
-sigma=1/frequency;
-angle=0;% not used in script, from Junjun. 
-gap=100;%arcmin gap between gabor stimuli (not used) was 100
-VerCont_high = 80; % contrast in %
-VerCont_low = 80 - ((CONTRAST*100)*1.414);% as used in the paper from Liu et al. 2021 (see references)
+%lamda=1/frequency;
+
+% Sigma of Gaussian
+sigma = 12;
+
+% Obvious Parameters
 orientation = 90;
+aspectRatio = 1.0;
 
-locCx1=gaborDimPix2/2;
-locCy1=gaborDimPix1/2;
-locCy2=locCy1+gap;
-locCx2=locCx1;
+freq = 0.4*CUTOFF;
+
+contrast_high = 0.8;
+contrast_low = 0.8 - ((CONTRAST)*1.414);
+
+% Set Up how many Gabors there are
+nGabors = 2; 
+
+gap = gaborDimPix+10; % in pixels 
 
 backgroundOffset = [0.5 0.5 0.5 0.0];
 disableNorm = 1;
 preContrastMultiplier = 0.5;
 aspectRatio = 1.0;
 phase = 0;
-contrast = 1; 
+
+gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix,...
+            [], [0.5 0.5 0.5 0.0], 1, 0.5);
+        
+xPos = xCenter;
+yPos = ceil(yCenter-(gaborDimPix/2)); % the top gabor
+
+% Make the destination rectangles for all the Gabors in the array
+baseRect = [0 0 1 0.5] .* gaborDimPix;
+allRects = nan(4, nGabors);
+allRects(:, 1) = CenterRectOnPointd(baseRect, xPos, yPos);
+allRects(:, 2) = CenterRectOnPointd(baseRect, xPos, yPos+gap);
+
+propertiesMat = repmat([phase, freq, sigma, contrast, aspectRatio, 0, 0, 0],...
+    nGabors, 1);
 
 %% Staircases 
 
@@ -287,11 +301,30 @@ mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
  repeatNoise = false; % used for repeating the same noise when having attention trial (UP/DOWN)
  att_test = 0; % counter for the numbers of attention tests failed 
  doubleScreen = false;
+    % will determine which side of the crosses will be moving (along with one copy of the fusion frame)
+    if contains(AMB_EYE, 'Left') 
+            HC1 = HCl;
+            HC2 = HCr;
+            FF1w = FFLw;
+            FF1b = FFLb;
+            FF2w = FFRw;
+            FF2b = FFRb;
+        else
+            HC1 = HCr;
+            HC2 = HCl;
+            FF1w = FFRw;
+            FF1b = FFRb;
+            FF2w = FFLw;
+            FF2b = FFLb;
+    end
+
+
+
 while ~sc.isFinished           % keep looping until staircase concludes
     
 % run the fixing cross before the trial
    [HC1,HC2, FF1w, FF1b, FF2w, FF2b] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
+doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi);
 
     StimLevel = sc.curLevel;                   % testing level from staircase
     linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
@@ -372,34 +405,28 @@ doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
     centerHsti=round(windowRect(3))/2-EccH;
 
     %change 80 by 0.8 if needed (80 in %)
-    if rand<0.5 
-       Gabor_up=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_low, frequency, sigma, phase, orientation+90, locCx1, locCy1-gap);
-       Gabor_down=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_high, frequency, sigma, phase, orientation+90, locCx2, locCy2);
-
-       ComGabor=Gabor_up+Gabor_down;
-       StimPatch=round((ComGabor+1)/2*255);
-       gabortex=Screen('MakeTexture',window,StimPatch);
+    if rand<0.5 % the good answer is the bottom one
+    
+        propertiesMat(1,4) = contrast_low;
+       propertiesMat(2,4) = contrast_high;  
+        
        ARROW_X = xPosVectorUP;
        ARROW_Y = yPosVectorUP;
        
        acc_resp = 'bottom';
-    else 
-       Gabor_up=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_high, frequency, sigma, phase, orientation+90, locCx1, locCy1-gap);
-       Gabor_down=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_low, frequency, sigma, phase, orientation+90, locCx2, locCy2);
-
-       ComGabor=Gabor_up+Gabor_down;
-       StimPatch=round((ComGabor+1)/2*255);
-       gabortex=Screen('MakeTexture',window,StimPatch);
-
+    else % the good answer is the top one
+       propertiesMat(1,4) = contrast_high;
+        propertiesMat(2,4) = contrast_low;   
+     
        ARROW_X = xPosVectorDOWN;
        ARROW_Y = yPosVectorDOWN;
 
        acc_resp = 'top';
     end
 
-    sum_zero = sum(Gabor_up(:,locCy1)==0);
-    proportion = 1-(sum_zero/length(Gabor_up));
-    gaborDimPix = round(((DIM_Screen_ver*SIZE_mm+DIM_Screen_hor*SIZE_mm)/2)/proportion); % we round it so we can keep a regular dva 
+    %sum_zero = sum(Gabor_up(:,locCy1)==0);
+    %proportion = 1-(sum_zero/length(Gabor_up));
+    %gaborDimPix = round(((DIM_Screen_ver*SIZE_mm+DIM_Screen_hor*SIZE_mm)/2)/proportion); % we round it so we can keep a regular dva 
 
     if rand<0.2 %rand<0.2
        ATT_TRIAL = 'true';
@@ -457,12 +484,14 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
     
     % then we launch the gabors and noise
-    dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
-    dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
+    %dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
+    %dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
     Screen('SelectStereoDrawBuffer',window,0);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-    
+    %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
+     % Batch draw the 2 Gabors to screen
+            Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
+                [], [], [], [], kPsychDontDoRotation, propertiesMat');
 
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
@@ -471,7 +500,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1); % was 500
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3); % was 500
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
 
@@ -502,12 +531,14 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     
   
  % then we launch the gabors and noise
-    dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
-    dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
+    %dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
+    %dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-
+    %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
+    % Batch draw the 2 Gabors to screen
+            Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
+                [], [], [], [], kPsychDontDoRotation, propertiesMat');
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
@@ -515,7 +546,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1);
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3);
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
     Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
@@ -549,7 +580,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1); %was 500
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3); %was 500
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
     Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
@@ -586,7 +617,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
 
     Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1);
+    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 3);
     Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
 
     Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
