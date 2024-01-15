@@ -1,12 +1,12 @@
 function [HC1,HC2, FF1w, FF1b, FF2w, FF2b] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress)
+doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi)
 
 %FIX_CROSS Summary 
 %   This function is running the fix cross. The same kind of step is done
 %   witht the visual training (see Liu et al. 2019). At the moment, the fix cross is only showed
 %   once. But with a slight modification, we can display it before each
 %   trial. 
-
+% Define black and white
 
 % will determine which side of the crosses will be moving (along with one copy of the fusion frame)
     if contains(AMB_EYE, 'Left') 
