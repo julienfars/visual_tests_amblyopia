@@ -69,7 +69,7 @@ end
 
 %%%%%%%%% pop-up window 
 prompt_first = {'is this a retest? [true/false]'}; % description of fields
-defaults_first = {string(global_param.Retest)}; % default answer to this field
+defaults_first = string(global_param.Retest); % default answer to this field
 answer_first = inputdlg(prompt_first, 'Parameters',2,defaults_first); % opens dialog window
 retest = answer_first{1,:};
 %%%%%%%%%
@@ -285,7 +285,7 @@ num_training = 5; % Number of training trials
     if sc.trialCount < num_training % when doing the training trials, the stimlevel is really easy and constant
         StimLevel = 3;
         freq = StimLevel/gaborDimPix; % frequency of the gabor in cycles per pixels (easy to convert then)
-        sigma = 12; % arbitrary - must check the best option
+        sigma = gaborDimPix/6; % arbitrary - must check the best option
         % make a properties matrix for the Gabor
         propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
         
@@ -294,7 +294,7 @@ num_training = 5; % Number of training trials
         StimLevel = sc.curLevel;                   % testing level from staircase
         linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
         freq = linStimLevel/gaborDimPix;           % frequency of the gabor in cycles per pixels (easy to convert then)
-        sigma = 12;                                % arbitrary - must check the best option
+        sigma = gaborDimPix/6;                                % arbitrary - must check the best option
         % make a properties matrix for the Gabor
         propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
    end 

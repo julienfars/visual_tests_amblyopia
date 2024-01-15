@@ -235,7 +235,7 @@ sc_num_freqs = [3];
 scRightRules = repelem(sc_num_freqs,num_freqs);
 
 %scRightRules    = [3, 3, 3, 3, 3, 3]; 
-numStaircases   = length(scRightRules);
+numStaircases   = numel(scRightRules);
 
 % set up of the keys used in this test
 leftKey=KbName('LeftArrow');
@@ -272,7 +272,7 @@ verbose         = 1;        % set to 1 for verbose staircase output
 exp_num = 1; 
 data_name = "data\" + SUBJECT + "_" + date + "_contrast_interleaved_" + ...
     exp_num + ".xls";
-nb_table = length(FREQS);
+nb_table = numel(FREQS);
 sz = [(maxNumTrials+7)*nb_table;14]; % added +6 for each staircase mean reversals and +1 for safety
 varTypes = ["double","double","double","double", "string", "string","double","double","double","string","double","datetime", "string", "string"];
 varNames = ["Staircase","Fraction","Frequency", "orientation", "Position","Key","Trial","Reversal","Level","value", "RT","time", "Eye", "AMB"];
@@ -456,7 +456,7 @@ counter_trial = 1;
     linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
     freq = FREQS(iSC);                         % match the randomly chosen staircase
     contrast = linStimLevel/100;               % /100 to get the percentage 0-1 = 0-100%
-    sigma = 12;                                % could be changed but 12 has the best visual effect 
+    sigma = gaborDimPix/6;                                % could be changed but 12 has the best visual effect 
     % make a properties matrix for the Gabor
     propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
     

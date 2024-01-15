@@ -185,7 +185,7 @@ sc_num_freqs = [1];
 scRightRules = repelem(sc_num_freqs,num_freqs);
 
 %scRightRules    = [3, 3, 3, 3, 3, 3]; 
-numStaircases   = length(scRightRules);
+numStaircases   = numel(scRightRules);
 
 % set up of the keys used in this test
 leftKey=KbName('LeftArrow');
@@ -226,7 +226,7 @@ verbose         = 1;        % set to 1 for verbose staircase output
 exp_num = 1; %temp, see above
 data_name = "data\" + SUBJECT + "_" + date + "_contrast_interleaved_" + ...
     exp_num + ".xls";
-nb_table = length(FREQS);
+nb_table = numel(FREQS);
 sz = [(maxNumTrials+7)*nb_table;15];
 varTypes = ["double","double","double","double", "double", "string", "string","double","double","double","double","double","datetime", "string", "string"];
 varNames = ["Staircase","Fraction","Frequency", "orientationAE", "orientationFE", "Position","Key","Trial","Reversal","LevelAE","Level", "RT","time", "Eye", "AMB"];
@@ -416,7 +416,7 @@ mt = table('Size',m,'VariableTypes',varTypes2,'VariableNames',varNames2);
             contrast = linStimLevel/100;
             contrastAE = 1; % if participant sees AE orientation then good answer, and the FE contrast gets higher
         end
-        sigma = 12;
+        sigma = gaborDimPix/6;
         % make properties matrixes for the Gabors
         propertiesMatAE = [phase, freq, sigma, contrastAE, aspectRatio, 0, 0, 0];
         propertiesMatFE = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
