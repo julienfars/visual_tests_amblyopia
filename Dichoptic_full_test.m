@@ -211,7 +211,7 @@ PixelPerDeg=gaborDimPix/SIZE; % horizontal size in pix
 %lamda=1/frequency;
 
 % Sigma of Gaussian
-sigma = 12;
+sigma = gaborDimPix/6;
 
 % Obvious Parameters
 orientation = 90;
@@ -267,8 +267,8 @@ initStepSize    = 0.4;      % staircase step size before first reversal
 stepSize        = 0.2;      % staircase step size after first reversal - has more reversals (see staircase code)
 nRightToDescend = 3;        % number of "correct" responses before ascending
 nWrongToAscend  = 1;        % number of "incorrect" responses before descending
-maxNumTrials    = 35;       % maximum number of trials for staircase (50 without the training)
-maxNumReversals = 6;       % maximum number of reversals for staircase
+maxNumTrials    = 40;       % maximum number of trials for staircase (50 without the training)
+maxNumReversals = 8;       % maximum number of reversals for staircase
 startLevel      = log10(20);%log10(20);%log10(NOISE*100);        % starting level of staircase (5 should be easy to begin with)
 verbose         = 1;        % set to 1 for verbose staircase output
 
@@ -323,7 +323,7 @@ rectColor = [1 1 1];
 while ~sc.isFinished           % keep looping until staircase concludes
     
 % run the fixing cross before the trial
-   [HC1,HC2, FF1w, FF1b, FF2w, FF2b] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
+   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
 doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi);
 
     StimLevel = sc.curLevel;                   % testing level from staircase
