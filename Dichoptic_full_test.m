@@ -197,7 +197,7 @@ eyelink_clear_screen(var_eye_link,el)
 
 DIM_Screen_hor = windowRect(3)/global_param.screen_size(2); % we get the number of pixels per mm
 DIM_Screen_ver = windowRect(4)/global_param.screen_size(1);
-%SIZE = 1; %in dva
+SIZE = 1; %in dva
 SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
 gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
 gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
@@ -206,9 +206,49 @@ gaborDimPix = round((max([gaborDimPix1 gaborDimPix2])+min([gaborDimPix1 gaborDim
 distance = 1500; 
 PixelPerDeg=gaborDimPix/SIZE; % horizontal size in pix
 
-%frequency = 0.3/CUTOFF; % inverse of the cutoff multiplied by 30% (see liu et al papers for more informations) 
 
-%lamda=1/frequency;
+% Initial stimulus params for the grating:
+virtualSize = gaborDimPix;
+phase = 0;
+freq = 0.4*CUTOFF;
+%tilt = 225;
+contrast_high = 0.8;
+contrast_low = (0.8 - ((CONTRAST)*1.414));
+
+% radius of the disc edge
+radius = virtualSize / 2;
+% smoothing sigma in pixel
+sigma = 55;
+% use alpha channel for smoothing?
+useAlpha = true;
+% smoothing method: cosine (0) or smoothstep (1) or inverse smoothstep (2)
+smoothMethod = 1;
+
+    %Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+sinetex = CreateProceduralSmoothedApertureSineGrating(window, virtualSize, virtualSize,...
+          [.5 .5 .5 1], radius, [], sigma, useAlpha, smoothMethod);
+
+% Set Up how many Gabors there are
+nGabors = 2;
+
+xPos = xCenter;
+yPos = ceil(yCenter-(gaborDimPix/2)/2); % the top gabor
+gap = (gaborDimPix/2); % in pixels 
+
+% Make the destination rectangles for all the Gabors in the array
+baseRect = [0 0 1 0.5] .* gaborDimPix;
+allRects = nan(4, nGabors);
+allRects(:, 1) = CenterRectOnPointd(baseRect, xPos, yPos);
+allRects(:, 2) = CenterRectOnPointd(baseRect, xPos, yPos+gap);
+
+propertiesMat = repmat([phase, freq, contrast_high, 0],...
+    nGabors, 1);
+
+Screen('DrawTexture', window, sinetex, [], [], tilt, [], [], [], [], [], [0,1,0,0]);
+
+Priority(MaxPriority(window));
+
+%{
 
 % Sigma of Gaussian
 sigma = gaborDimPix/6;
@@ -219,8 +259,9 @@ aspectRatio = 1.0;
 
 freq = 0.4*CUTOFF;
 
-contrast_high = 0.8;
-contrast_low = 0.8 - ((CONTRAST)*1.414);
+contrast_high = 0.8*100;
+contrast_low = (0.8 - ((CONTRAST)*1.414))*100;
+
 
 % Set Up how many Gabors there are
 nGabors = 2; 
@@ -231,10 +272,11 @@ backgroundOffset = [0.5 0.5 0.5 0.0];
 disableNorm = 1;
 preContrastMultiplier = 0.5;
 aspectRatio = 1.0;
-phase = 0;
+phase = 180;
 
-gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix,...
-            [], [0.5 0.5 0.5 0.0], 1, 0.5);
+%gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix,...
+%            [], [0.5 0.5 0.5 0.0], 1, 0.5);
+gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, 1);
         
 xPos = xCenter;
 yPos = ceil(yCenter-(gaborDimPix/2)/2); % the top gabor
@@ -247,6 +289,12 @@ allRects(:, 2) = CenterRectOnPointd(baseRect, xPos, yPos+gap);
 
 propertiesMat = repmat([phase, freq, sigma, 0, aspectRatio, 0, 0, 0],...
     nGabors, 1);
+
+Priority(MaxPriority(window));
+
+
+Screen('DrawTexture', window, gabortex, [], [], [], [], [], [], [], kPsychDontDoRotation, [phase, freq, sigma, contrast_high, aspectRatio, 0, 0, 0]);
+%}
 
 %% Staircases 
 
@@ -342,7 +390,7 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
     %texSize = 4.4 * size_dva; % would be too small 
     %x = meshgrid(-texSize/2+1:texSize/2, -texSize/2+1:texSize/2);
     
-    noise = bandpass_noise_maker(1010,5.5,240); % was 240,5.5,240
+    noise = bandpass_noise_maker(252,5.5,240); % was 240,5.5,240
 %{
     for i=1:texSize+1
             for j=1:texSize+1
@@ -407,16 +455,16 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
     %change 80 by 0.8 if needed (80 in %)
     if rand<0.5 % the good answer is the bottom one
     
-        propertiesMat(1,4) = contrast_low;
-       propertiesMat(2,4) = contrast_high;  
+        propertiesMat(1,3) = contrast_low;
+       propertiesMat(2,3) = contrast_high;  
         
        ARROW_X = xPosVectorUP;
        ARROW_Y = yPosVectorUP;
        
        acc_resp = 'bottom';
     else % the good answer is the top one
-       propertiesMat(1,4) = contrast_high;
-        propertiesMat(2,4) = contrast_low;   
+       propertiesMat(1,3) = contrast_high;
+        propertiesMat(2,3) = contrast_low;   
      
        ARROW_X = xPosVectorDOWN;
        ARROW_Y = yPosVectorDOWN;
@@ -488,10 +536,14 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     %dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
     Screen('SelectStereoDrawBuffer',window,0);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    %Screen('BlendFunction', window, GL_ONE, GL_ONE);
+        Screen('DrawTexture', window, sinetex, [], allRects(:,1), 0, [], [], [], [], [], propertiesMat(1,:));
+        Screen('DrawTexture', window, sinetex, [], allRects(:,2), 0, [], [], [], [], [], propertiesMat(2,:));
+
     %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
      % Batch draw the 2 Gabors to screen
-            Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
-                [], [], [], [], kPsychDontDoRotation, propertiesMat');
+    %        Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
+    %            [], [], [], [], kPsychDontDoRotation, propertiesMat');
 
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
@@ -536,9 +588,13 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
+    %Screen('Blendfunction', window, GL_ONE, GL_ZERO);
+            Screen('DrawTexture', window, sinetex, [], allRects, tilt, [], [], [], [], [], propertiesMat);
+
     % Batch draw the 2 Gabors to screen
-            Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
-                [], [], [], [], kPsychDontDoRotation, propertiesMat');
+    %Screen('BlendFunction', window, GL_ONE, GL_ONE);
+    %        Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
+    %            [], [], [], [], kPsychDontDoRotation, propertiesMat');
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
@@ -757,6 +813,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
    end
   
 end
+Priority(0);
 
 % eyelink - close the edf file
  newName = ['Dichoptic_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
