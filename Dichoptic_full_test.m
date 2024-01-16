@@ -84,7 +84,7 @@ end
 
 %%%%%%%%% pop-up window
 prompt = {'Enter subject number:', 'stimuli size', 'distance from screen', 'Which eye is amblyopic?', 'Noise contrast?', 'contrast discrimination threshold?', 'cut-off frequency', 'edf file name?', "Eye tested"}; %description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.1', num2str(0.15), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
+defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.22', num2str(0.15), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
 answer = inputdlg(prompt, 'Parameters',2,defaults); %opens dialog
 SUBJECT = answer{1,:}; %Gets Subject Name
 SIZE = str2double(answer{2,:}); %Gets size of the stim (0.29 is from the article)
@@ -317,7 +317,7 @@ nRightToDescend = 3;        % number of "correct" responses before ascending
 nWrongToAscend  = 1;        % number of "incorrect" responses before descending
 maxNumTrials    = 40;       % maximum number of trials for staircase (50 without the training)
 maxNumReversals = 8;       % maximum number of reversals for staircase
-startLevel      = log10(20);%log10(20);%log10(NOISE*100);        % starting level of staircase (5 should be easy to begin with)
+startLevel      = log10(50);%log10(20);%log10(NOISE*100);        % starting level of staircase (5 should be easy to begin with)
 verbose         = 1;        % set to 1 for verbose staircase output
 
 % class constructor function returns staircase object (see staircase.m)
@@ -384,7 +384,7 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
         NOISE = linStimLevel/100; % go on with the newly calculated noise
         fgcontrast = NOISE;
     end
-
+    
     % here the code to generate the noise 
     texSize = 252; %size in pixels, was 240
     %texSize = 4.4 * size_dva; % would be too small 
@@ -402,7 +402,7 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
     end
 %}
 
-    smoothedNoise = noise*NOISE;
+    smoothedNoise = noise*NOISE; % careful
     noiseTexture = Screen('MakeTexture', window, smoothedNoise, [], [], 1);
     
 % here is the arrows
@@ -686,7 +686,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     end
 
     % Flip to the screen
-    beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
+     % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
     Screen('Flip', window);
 
     
@@ -737,9 +737,11 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
         elseif  keyCode==upKey && contains(acc_resp, 'top')
                 sc.doResp(1); 
                 value = 'TRUE';
+                
         elseif  keyCode==downKey && contains(acc_resp, 'bottom')
                 sc.doResp(1);
                 value = 'TRUE';
+                
         else
                 sc.doResp(0);
                 value = 'FALSE';
@@ -749,8 +751,10 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
                 break;
         elseif  keyCode==upKey && contains(acc_resp, 'top')
                 value = 'ATT_TRUE';
+                
         elseif  keyCode==downKey && contains(acc_resp, 'bottom')
                 value = 'ATT_TRUE';
+                
         else
                 value = 'ATT_FALSE';
                 att_test = att_test+1;
@@ -759,6 +763,11 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
                 end
         end
         sc.trialCount = sc.trialCount+1;
+    end
+
+    if contains(value, 'TRUE') || contains(value, 'ATT_TRUE') 
+        WaitSecs(0.05);
+                beep;
     end
 
     KbReleaseWait;
