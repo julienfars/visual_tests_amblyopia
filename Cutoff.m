@@ -86,19 +86,18 @@ end
 % from the screen, etc...
 
 %%%%%%%%% pop-up window
-prompt = {'Enter subject number:', 'stimuli size', 'distance from screen (mm)', 'Which eye(s) is/are tested? (Left/Right/Both)', 'Which eye is amblyopic? (Left/Right)', 'Binocular? (true/false)', 'EDF file name?'}; % description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), global_param.EYE_TEST, global_param.AMB_EYE, 'false', strcat(global_param.ID,'co')}; % default answers
+prompt = {'Enter subject number:', 'stimuli size', 'distance from screen (mm)', 'Which eye(s) is/are tested? (Left/Right/Both)', 'Which eye is amblyopic? (Left/Right)', 'EDF file name?'}; % description of fields
+defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), global_param.EYE_TEST, global_param.AMB_EYE, strcat(global_param.ID,'co')}; % default answers
 answer = inputdlg(prompt, 'Parameters',2,defaults); % opens dialog window
 SUBJECT = answer{1,:}; %Gets Subject Name
 SIZE = str2double(answer{2,:}); %Gets size of the stim (in dva)
 DISTANCE = str2double(answer{3,:}); %Gets distance from the screen
 EYE_TEST = answer{4,:}; %Gets the tested eye
 AMB_EYE = answer{5,:}; %Gets the amblyopic eye
-Glasses = answer{6,:}; %For strabismic participants
-edfFile = answer{7,:}; %Sets the eye link file's name 
+edfFile = answer{6,:}; %Sets the eye link file's name 
 %%%%%%%%%
 
-if contains(EYE_TEST, 'Both') && contains(Glasses, 'true') % if the participant is strabismic, then we set up the fixation cross task before the trials
+if contains(EYE_TEST, 'Both') % if the participant is strabismic, then we set up the fixation cross task before the trials
     fixCross = 'true';
 else
     fixCross = 'false';
@@ -133,9 +132,6 @@ PsychDefaultSetup(2);
 screens = Screen('Screens');
 screenNumber = max(screens); % set the experiment on the last screen (will not change anything if you only have one screen)
 
-% load the gamma table 
-%load MyGammaTable % not ready yet, must complete calibration
-
 % Define black and white
 white = WhiteIndex(screenNumber);
 black = BlackIndex(screenNumber);
@@ -146,15 +142,15 @@ black = BlackIndex(screenNumber);
 % will be half the luminace value for white
 grey = white / 2;
 
-if fixCross == true && contains(EYE_TEST, 'Both')  % setting up the stereomode when both eyes are used 
-    stereoMode = 100; 
-    PsychImaging('PrepareConfiguration');
-    PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
-    [window, windowRect] = PsychImaging('OpenWindow',screenNumber,grey,[],[],[],stereoMode);
-else
-    stereoMode = [];
-    [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey);
-end
+stereoMode = 100; 
+PsychImaging('PrepareConfiguration');
+PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
+PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+[window, windowRect] = PsychImaging('OpenWindow',screenNumber,grey,[],[],[],stereoMode);
+
+% load the gamma table % not ready yet, must complete calibration
+%load MyGammaTable 
+%Screen('LoadNormalizedGammaTable', window, gammaTable*[1 1 1]);
 
 % Instead of returning width and height of the graphics window/screen in pixels
 % using this [width, height] = Screen('WindowSize', window); 
@@ -192,10 +188,13 @@ eyelink_clear_screen(var_eye_link,el)
 
 DIM_Screen_hor = windowRect(3)/global_param.screen_size(1); % we get the number of pixels per mm for the screen's width
 DIM_Screen_ver = windowRect(4)/global_param.screen_size(2); % we get the number of pixels per mm for the screen's height
-SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
+SIZE_mm = 2*global_param.distance*tand(global_param.stim_size/2); % convert the size of stim from dva to mm
 gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
 gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
-gaborDimPix = round((max([gaborDimPix1 gaborDimPix2])+min([gaborDimPix1 gaborDimPix2]))/2); % we round it so we can keep a regular dva 
+%gaborDimPix = round((max([gaborDimPix1 gaborDimPix2])+min([gaborDimPix1 gaborDimPix2]))/2); % we round it so we can keep a regular dva 
+gaborDimPix = ceil(max([gaborDimPix1 gaborDimPix2])); % the biggest value is set up as the 'real' value (because of stereomode)
+
+PixelPerDeg=gaborDimPix/global_param.stim_size; % horizontal size in pix
 
 %% Other Gabor Parameters
 
@@ -259,7 +258,6 @@ varTypes2 = ["double", "double"];
 varNames2 = ["Reversal  Number", "Value"];
 mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
 
-    
  %% Start the experiment 
 
     doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')

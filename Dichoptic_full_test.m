@@ -197,15 +197,12 @@ eyelink_clear_screen(var_eye_link,el)
 
 DIM_Screen_hor = windowRect(3)/global_param.screen_size(2); % we get the number of pixels per mm
 DIM_Screen_ver = windowRect(4)/global_param.screen_size(1);
-SIZE = 1; %in dva
 SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
 gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
 gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
 gaborDimPix = round((max([gaborDimPix1 gaborDimPix2])+min([gaborDimPix1 gaborDimPix2]))/2); % we round it so we can keep a regular dva 
 
-distance = 1500; 
 PixelPerDeg=gaborDimPix/SIZE; % horizontal size in pix
-
 
 % Initial stimulus params for the grating:
 virtualSize = gaborDimPix;
@@ -224,7 +221,15 @@ useAlpha = true;
 % smoothing method: cosine (0) or smoothstep (1) or inverse smoothstep (2)
 smoothMethod = 1;
 
-    %Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+% the following function creates sine gratings and not gabor patches. As a
+% reminder, a gabor patch is sine grating multplied by a gaussian window.
+% This is what transform a sine grating (squre shaped grating) in a gabor
+% patch (circular grating with fading edges). BUT this function also
+% handles apertures (for the circular shape) AND smoothing edges. We can
+% therefore reproduce a gabor patch 'artificially'. Ther reason why we use
+% this function instead of the regular gabor one is because of the
+% incompatibility between the gabor function/texture and the noise texture
+% when mixed using the stereovision. 
 sinetex = CreateProceduralSmoothedApertureSineGrating(window, virtualSize, virtualSize,...
           [.5 .5 .5 1], radius, [], sigma, useAlpha, smoothMethod);
 
@@ -247,54 +252,6 @@ propertiesMat = repmat([phase, freq, contrast_high, 0],...
 Screen('DrawTexture', window, sinetex, [], [], tilt, [], [], [], [], [], [0,1,0,0]);
 
 Priority(MaxPriority(window));
-
-%{
-
-% Sigma of Gaussian
-sigma = gaborDimPix/6;
-
-% Obvious Parameters
-orientation = 90;
-aspectRatio = 1.0;
-
-freq = 0.4*CUTOFF;
-
-contrast_high = 0.8*100;
-contrast_low = (0.8 - ((CONTRAST)*1.414))*100;
-
-
-% Set Up how many Gabors there are
-nGabors = 2; 
-
-gap = (gaborDimPix/2); % in pixels 
-
-backgroundOffset = [0.5 0.5 0.5 0.0];
-disableNorm = 1;
-preContrastMultiplier = 0.5;
-aspectRatio = 1.0;
-phase = 180;
-
-%gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix,...
-%            [], [0.5 0.5 0.5 0.0], 1, 0.5);
-gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, 1);
-        
-xPos = xCenter;
-yPos = ceil(yCenter-(gaborDimPix/2)/2); % the top gabor
-
-% Make the destination rectangles for all the Gabors in the array
-baseRect = [0 0 1 0.5] .* gaborDimPix;
-allRects = nan(4, nGabors);
-allRects(:, 1) = CenterRectOnPointd(baseRect, xPos, yPos);
-allRects(:, 2) = CenterRectOnPointd(baseRect, xPos, yPos+gap);
-
-propertiesMat = repmat([phase, freq, sigma, 0, aspectRatio, 0, 0, 0],...
-    nGabors, 1);
-
-Priority(MaxPriority(window));
-
-
-Screen('DrawTexture', window, gabortex, [], [], [], [], [], [], [], kPsychDontDoRotation, [phase, freq, sigma, contrast_high, aspectRatio, 0, 0, 0]);
-%}
 
 %% Staircases 
 
