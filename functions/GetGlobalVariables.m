@@ -5,8 +5,8 @@ function  global_param = GetGlobalVariables()
 
 %% get all your screen paramaters here 
 
-global_param.screen_size = [700 392]; %[300 187]for the laptop. [horizontal vertical] in mm will change when using Display++
-global_param.stim_size = 2;           % size of the stim in dva - was 1.13 dva but trying 2 to see if better cutoff results 
+global_param.screen_size = [700 392]; % [300 187]for the laptop. [horizontal vertical] in mm will change when using Display++
+global_param.stim_size = 1;           % size of the stim in dva - was 1.13 dva but trying 1 to see if better results 
 global_param.distance = 1500;         % distance from the screen in mm
 global_param.distance_Snellen = 2500; % distance from the screen in mm (for the Snellen and Snellen crowded tests)
 global_param.fusionFrameLength = 552; % was at 540 for the binoc experiment - change, must be a t 4,4 x 4,4 dva instead 
@@ -16,7 +16,7 @@ global_param.pix_shift = [0;0];       % this is recorded in contrast interleaved
 global_param.reduced = false;
 
 %% all the participant parameters 
-global_param.ID = '0';
+global_param.ID = '0'; % default at 0 --> indicates test 
 global_param.AMB_EYE = '?';
 global_param.Retest = false;
 global_param.EYE_TEST = '?';
@@ -42,7 +42,7 @@ global_param.binoc = [];
 global_param.dichop = [];
 
 %% parameters from the Asteroid test 
-%not used in another test - not recorded at the moment 
+% not recorded at the moment 
 
 %% parameters from the Snellen 
 global_param.MAR_min_theory = [];

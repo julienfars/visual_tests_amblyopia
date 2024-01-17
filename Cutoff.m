@@ -90,7 +90,7 @@ prompt = {'Enter subject number:', 'stimuli size', 'distance from screen (mm)', 
 defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), global_param.EYE_TEST, global_param.AMB_EYE, 'false', strcat(global_param.ID,'co')}; % default answers
 answer = inputdlg(prompt, 'Parameters',2,defaults); % opens dialog window
 SUBJECT = answer{1,:}; %Gets Subject Name
-SIZE = str2double(answer{2,:}); %Gets size of the stim 
+SIZE = str2double(answer{2,:}); %Gets size of the stim (in dva)
 DISTANCE = str2double(answer{3,:}); %Gets distance from the screen
 EYE_TEST = answer{4,:}; %Gets the tested eye
 AMB_EYE = answer{5,:}; %Gets the amblyopic eye
@@ -132,6 +132,9 @@ PsychDefaultSetup(2);
 % Get the screen numbers
 screens = Screen('Screens');
 screenNumber = max(screens); % set the experiment on the last screen (will not change anything if you only have one screen)
+
+% load the gamma table 
+%load MyGammaTable % not ready yet, must complete calibration
 
 % Define black and white
 white = WhiteIndex(screenNumber);
