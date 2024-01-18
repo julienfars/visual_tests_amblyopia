@@ -9,7 +9,6 @@ doubleScreen, AMB_EYE,HC1,HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, FFLw, FFLb, FFR
 % Define black and white
 
 
-
     while fixCross == true
     
     vbl = Screen('Flip', window);

@@ -22,24 +22,27 @@ global_param.Retest = false;
 global_param.EYE_TEST = '?';
 
 %% parameters from the CUTOFF
-global_param.cut_off = [];
-global_param.cut_off_AE = [];
-global_param.cut_off_FE = [];
-global_param.cut_off_BE = [];
+global_param.cut_off = '?';
+global_param.cut_off_AE = '?';
+global_param.cut_off_FE = '?';
+global_param.cut_off_BE = '?';
 
 %% parameters from the Contrast Interleaved test
-global_param.contrast = [];
-global_param.contrast_AE = [];
-global_param.contrast_FE = [];
-global_param.contrast_BE = [];
+global_param.contrast = '?';
+global_param.contrast_AE = [0.5 0.5 0.5 0.5 0.5 0.5];
+global_param.contrast_FE = '?';
+global_param.contrast_BE = '?';
 global_param.reduced = false;
 global_param.freqs = [0.0625 0.125 0.25 0.5 0.75 1];
 
 %% parameters from the Binocular Orientation
-global_param.binoc = [];
+global_param.binoc = '?';
 
 %% parameters from the Dichoptic test
+% all those values are important for the VR training
 global_param.dichop = [];
+global_param.dichop_contrast_high = [];
+global_param.dichop_contrast_low = [];
 
 %% parameters from the Asteroid test 
 % not recorded at the moment 

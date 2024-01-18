@@ -64,6 +64,12 @@ else
     end
 end 
 
+if isempty(global_param.dichop)
+    start_noise = global_param.contrast_AE(3); % we take the third one as it should be the best option
+else 
+    start_noise = global_param.dichop; 
+end
+
 %%%%%%%%% pop-up window 
 prompt_first = {'is this a retest? [true/false]'}; % description of fields
 defaults_first = string(global_param.Retest); % default answer to this field
@@ -84,7 +90,7 @@ end
 
 %%%%%%%%% pop-up window
 prompt = {'Enter subject number:', 'stimuli size', 'distance from screen', 'Which eye is amblyopic?', 'Noise contrast?', 'contrast discrimination threshold?', 'cut-off frequency', 'edf file name?', "Eye tested"}; %description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.22', num2str(0.15), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
+defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', global_param.dichop, global_param.contrast_AE(3), global_param.cut_off_AE, strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
 answer = inputdlg(prompt, 'Parameters',2,defaults); %opens dialog
 SUBJECT = answer{1,:}; %Gets Subject Name
 SIZE = str2double(answer{2,:}); %Gets size of the stim (0.29 is from the article)
@@ -112,8 +118,6 @@ definput = {CUTOFF};
 answer = inputdlg(prompt,'Parameter',dims,definput);
 CUTOFF = answer{1,:}; 
 CUTOFF = str2num(CUTOFF);
-
-%CUTOFF = num2str(CUTOFF)*0.4; % following Liu & Zhang paper, we only use 40% of the cut-off frequency
 
 %% Eyelink Parameters
 
@@ -207,10 +211,13 @@ PixelPerDeg=gaborDimPix/SIZE; % horizontal size in pix
 % Initial stimulus params for the grating:
 virtualSize = gaborDimPix;
 phase = 0;
-freq = 0.4*CUTOFF;
-%tilt = 225;
+freq = 0.4*CUTOFF; % following Liu & Zhang paper, we only use 40% of the cut-off frequency
+tilt = 0;
 contrast_high = 0.8;
-contrast_low = (0.8 - ((CONTRAST)*1.414));
+contrast_low = abs(exp(-1.6*CONTRAST)-0.2);
+%contrast_low = (0.8 - ((CONTRAST)*1.414));
+% fplot(@(x) (0.8 - ((x)*1.414)),[0 1])
+% fplot(@(x) abs(exp(-1.6*x)-0.2),[0 1]) % YES! better way to do it
 
 % radius of the disc edge
 radius = virtualSize / 2;
@@ -265,6 +272,7 @@ upKey=KbName('UpArrow');
 downKey=KbName('DownArrow');
 escapeKey = KbName('ESCAPE');
 spaceKey = KbName('SPACE');
+start_trial_key = KbName('a');
 
 % these parameters control the staircase (change it to remove the extra stepSizes)
 StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 50 (log) - which should provide around 30 steps 
@@ -328,7 +336,7 @@ rectColor = [1 1 1];
 while ~sc.isFinished           % keep looping until staircase concludes
     
 % run the fixing cross before the trial
-   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
+   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff] = fix_cross(fixCross,window, start_trial_key, leftKey, rightKey, upKey, downKey, spaceKey, ...
 doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi);
 
     StimLevel = sc.curLevel;                   % testing level from staircase
@@ -395,12 +403,8 @@ doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFR
 
     if rand<0.5 % for each trial the orientation is set randomly, careful, it is reversed 
         %counterclockwise instead of clockwise!!!!!
-    angular = 45;
-    %orientation = 315;
     orientation = 90-45;
     else 
-    angular = 315;
-    %orientation = 45;
     orientation = 90+45;
     end
 
@@ -493,15 +497,8 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     %dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
     Screen('SelectStereoDrawBuffer',window,0);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    %Screen('BlendFunction', window, GL_ONE, GL_ONE);
-        Screen('DrawTexture', window, sinetex, [], allRects(:,1), 0, [], [], [], [], [], propertiesMat(1,:));
-        Screen('DrawTexture', window, sinetex, [], allRects(:,2), 0, [], [], [], [], [], propertiesMat(2,:));
-
-    %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-     % Batch draw the 2 Gabors to screen
-    %        Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
-    %            [], [], [], [], kPsychDontDoRotation, propertiesMat');
-
+    Screen('DrawTexture', window, sinetex, [], allRects(:,1), orientation, [], [], [], [], [], propertiesMat(1,:));
+    Screen('DrawTexture', window, sinetex, [], allRects(:,2), orientation, [], [], [], [], [], propertiesMat(2,:));
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
@@ -544,15 +541,9 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     %dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    %Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-    %Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-            Screen('DrawTexture', window, sinetex, [], allRects, tilt, [], [], [], [], [], propertiesMat);
-
-    % Batch draw the 2 Gabors to screen
-    %Screen('BlendFunction', window, GL_ONE, GL_ONE);
-    %        Screen('DrawTextures', window, gabortex, [], allRects+diff, orientation,...
-    %            [], [], [], [], kPsychDontDoRotation, propertiesMat');
-
+    Screen('DrawTexture', window, sinetex, [], allRects(:,1), orientation, [], [], [], [], [], propertiesMat(1,:));
+    Screen('DrawTexture', window, sinetex, [], allRects(:,2), orientation, [], [], [], [], [], propertiesMat(2,:));
+   
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
     Screen('SelectStereoDrawBuffer',window,0);
@@ -801,6 +792,9 @@ writetable(temps,filename)
 fprintf('Output saved in: %s\n', filename)
 
 %% ending the script
+global_param.dichop = NOISE; 
+global_param.dichop_contrast_high = contrast_high;
+global_param.dichop_contrast_low = contrast_low;
 
 save('global_param.mat','global_param'); % save the changes for the next tests 
 
