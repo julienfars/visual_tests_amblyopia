@@ -1,18 +1,17 @@
 %{
-Welcome to the battery of tests used in the Amblyopia study. 
-If you have questions about the tests, contact Juju (julien.fars@ndcn.ox.ac.uk)
-This battery aims to test various functions of the amblyopic visual experience. 
-The parameters of this test (and the subsequent ones) are extracted from the GetGlobalVariables.m script and then are stored in the
-global_param.mat variable.
-Change the parameters in the GetGlobalVariables.m script to your settings FIRST. 
-This battery of tests is using modified scripts from several research teams and individuals. 
-For the original version of these scripts, contact: 
-- Alex S Baldwin - McGill Vision Research (for the staircase protocol)
-- Jun-Yun Zhang - Beijing Key Laboratory of Behavior and Mental Health (for the Dichoptic test)
-- Alice Grasso McCaslin, School of Optometry, Indiana University (Asteroid test script and related functions)
+Welcome to the Amblyopia Study Test Battery.
 
-It is also important to note that some functions present in the battery of tests were inspired from the
-work of Peter Scarfe - Scarfe Lab (see https://peterscarfe.com/ptbtutorials.html)
+This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
+If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
+
+Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
+
+This battery utilizes modified scripts from different researchers:
+- Alex S Baldwin (Staircase protocol)
+- Jun-Yun Zhang (Dichoptic test)
+- Alice Grasso McCaslin (Asteroid test script)
+
+Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
 %}
 
 %{
@@ -28,34 +27,25 @@ binocularly. At the end we obtain 3 CUTOFF frequencies:
 - Fellow Eye (FE)
 - Amblyopic Eye (AE) 
 - Both Eyes (BE)
-
 %}
 
 
 %% Setup
-% first we setup the screen, the workspace and the command window
-
 sca; % to clean the workspace
 commandwindow; % to open the command window
 filepath=fileparts(which('Cutoff.m')); % determine the filepath of the current script (all tests must be in the same folder) 
 cd(filepath); % add the filepath to matlab filepaths (to save the files at the end of the test)
 KbName('UnifyKeyNames'); %set up the keyboard for answers 
 
-%% initialisation of eyelink
-% then we initialise the eye link
-
-[dummymode, var_eye_link] = eyelink_init(1); % will return variables that indicates that the eye link is ready to start (dummymode, var_eye_link)
+%% Eyelink Initialization
+[dummymode, var_eye_link] = eyelink_init(1);
 
 %% Same patient? Retest? 
 % This battery of test will be performed thrice on the same session (FE, AE and BE)
 % And thrice for each participant (training, test and retest)
 
-%%%%%%%%% pop-up window
-prompt_second = {'is this a new patient? [true/false]'}; %description of fields
-defaults_second = {'false'};
-answer_second = inputdlg(prompt_second, 'Parameters',2,defaults_second); % opens dialog window
-New_patient = answer_second{1,:};
-%%%%%%%%%
+New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
+retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
 
 if contains(New_patient, 'true')
     global_param = GetGlobalVariables(); % set up of a 'brand new' "global_param" structure file 
@@ -67,42 +57,15 @@ else
     end
 end 
 
-%%%%%%%%% pop-up window 
-prompt_first = {'is this a retest? [true/false]'}; % description of fields
-defaults_first = string(global_param.Retest); % default answer to this field
-answer_first = inputdlg(prompt_first, 'Parameters',2,defaults_first); % opens dialog window
-retest = answer_first{1,:};
-%%%%%%%%%
-
-% retest variable is set at false 
-if contains(retest, 'true')
-    global_param.Retest = true;
-else
-    global_param.Retest = false;
-end
+% Set retest variable
+global_param.Retest = contains(retest, 'true');
 
 %% Participant Information 
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
 
-%%%%%%%%% pop-up window
-prompt = {'Enter subject number:', 'stimuli size', 'distance from screen (mm)', 'Which eye(s) is/are tested? (Left/Right/Both)', 'Which eye is amblyopic? (Left/Right)', 'EDF file name?'}; % description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), global_param.EYE_TEST, global_param.AMB_EYE, strcat(global_param.ID,'co')}; % default answers
-answer = inputdlg(prompt, 'Parameters',2,defaults); % opens dialog window
-SUBJECT = answer{1,:}; %Gets Subject Name
-SIZE = str2double(answer{2,:}); %Gets size of the stim (in dva)
-DISTANCE = str2double(answer{3,:}); %Gets distance from the screen
-EYE_TEST = answer{4,:}; %Gets the tested eye
-AMB_EYE = answer{5,:}; %Gets the amblyopic eye
-edfFile = answer{6,:}; %Sets the eye link file's name 
-%%%%%%%%%
-
-if contains(EYE_TEST, 'Both') % if the participant is strabismic, then we set up the fixation cross task before the trials
-    fixCross = 'true';
-else
-    fixCross = 'false';
-end
-    fixCross = strcmp(fixCross,'true'); %convert string to boolean
+% Call the function to get participant information
+[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross] = getParticipantInfo(global_param);
 
 global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
 global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
@@ -113,52 +76,8 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
 
 %% Screen Parameters
-
-if ismac % only for testing purposes, check if your system is compatible when doing real experiment 
-    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-elseif isunix % linux platforms are generally fine
-    Screen('Preference', 'SkipSyncTests', 0);
-elseif ispc % only for testing purposes, check if your system is compatible when doing real experiment 
-    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-else
-    disp('Platform not supported')
-    return
-end
-
-% Here we call some default settings for setting up Psychtoolbox
-PsychDefaultSetup(2);
-
-% Get the screen numbers
-screens = Screen('Screens');
-screenNumber = max(screens); % set the experiment on the last screen (will not change anything if you only have one screen)
-
-% Define black and white
-white = WhiteIndex(screenNumber);
-black = BlackIndex(screenNumber);
-
-%%%%%%%%% here add the calibration stuff (function)
-
-% Do a simple calculation to calculate the luminance value for grey. This
-% will be half the luminace value for white
-grey = white / 2;
-
-stereoMode = 100; 
-PsychImaging('PrepareConfiguration');
-PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
-PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
-[window, windowRect] = PsychImaging('OpenWindow',screenNumber,grey,[],[],[],stereoMode);
-
-% load the gamma table % not ready yet, must complete calibration
-%load MyGammaTable 
-%Screen('LoadNormalizedGammaTable', window, gammaTable*[1 1 1]);
-
-% Instead of returning width and height of the graphics window/screen in pixels
-% using this [width, height] = Screen('WindowSize', window); 
-% we do 
-width = windowRect(3);
-height = windowRect(4);
-% we must adapt the stimuli to the current size of the window (related to stereomode)
-
+% Call the function to set up screen parameters
+[window, windowRect, width, height] = setupScreen();
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
@@ -166,12 +85,8 @@ height = windowRect(4);
 [el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
 
 %% Other parameters
-
-HideCursor(); %hides the cursor
-KbName('UnifyKeyNames'); %used for cross-platform compatibility of keynaming
-KbQueueCreate; %creates cue using defaults
-KbQueueStart;  %starts the cue - keyboard inputs are considered now
-[xCenter, yCenter] = RectCenter(windowRect);
+% Call the function to set up other parameters
+[xCenter, yCenter] = setupOtherParameters(window, windowRect);
 
 %% clear screen of host PC 
 % clears the screen of the host PC so we can start the test
@@ -186,15 +101,8 @@ eyelink_clear_screen(var_eye_link,el)
 
 %% Basic Gabor parameters
 
-DIM_Screen_hor = windowRect(3)/global_param.screen_size(1); % we get the number of pixels per mm for the screen's width
-DIM_Screen_ver = windowRect(4)/global_param.screen_size(2); % we get the number of pixels per mm for the screen's height
-SIZE_mm = 2*global_param.distance*tand(global_param.stim_size/2); % convert the size of stim from dva to mm
-gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
-gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
-%gaborDimPix = round((max([gaborDimPix1 gaborDimPix2])+min([gaborDimPix1 gaborDimPix2]))/2); % we round it so we can keep a regular dva 
-gaborDimPix = ceil(max([gaborDimPix1 gaborDimPix2])); % the biggest value is set up as the 'real' value (because of stereomode)
-
-PixelPerDeg=gaborDimPix/global_param.stim_size; % horizontal size in pix
+% Call the function to set up basic Gabor parameters
+[gaborDimPix, PixelPerDeg] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size);
 
 %% Other Gabor Parameters
 
@@ -216,16 +124,8 @@ gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, [],...
 %% Staircase 
 % then we set up the staircase procedure
 
-% keyboard keys used in the script 
-leftKey=KbName('LeftArrow');
-rightKey=KbName('RightArrow');
-upKey=KbName('UpArrow');
-downKey=KbName('DownArrow');
-escapeKey = KbName('ESCAPE');
-spaceKey = KbName('SPACE');
-
 % these parameters control the staircase (change it to remove the extra stepSizes)
-StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 50 (log) - which should provide around 30 steps 
+StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 50 (log) 
 initStepSize    = 0.6;      % staircase step size before first reversal
 stepSize        = 0.4;      % staircase step size after first reversal - has more reversals (see staircase code)
 nRightToAscend  = 3;        % number of "correct" responses before ascending
@@ -264,76 +164,27 @@ mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
 while ~sc.isFinished           % keep looping until staircase concludes
     
     % run the fixing cross before the trial
-   [HC1,HC2, FF1w, FF1b, FF2w, FF2b] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
+   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
 doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
 
    % Randomisation
-    % for each trial the orientation is set randomly. Careful, the Gabor 
-    % code from the psychtoolbox is not using degrees clockwise but
-    % counterclockwise. This is why the angular variable is used for the 
-    % code but the orientation variable is used for the dataframe. 
-    if rand<0.5 
-        angular = 45;
-        orientation = 315;
-        else 
-        angular = 315;
-        orientation = 45;
-    end
-    
-    % training trials
-num_training = 5; % Number of training trials
+[angular, orientation] = randomizeOrientation();
 
-    if sc.trialCount < num_training % when doing the training trials, the stimlevel is really easy and constant
-        StimLevel = 3;
-        freq = StimLevel/gaborDimPix; % frequency of the gabor in cycles per pixels (easy to convert then)
-        sigma = gaborDimPix/6; % arbitrary - must check the best option
-        % make a properties matrix for the Gabor
-        propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
-        
-    elseif sc.trialCount >= num_training
-        
-        StimLevel = sc.curLevel;                   % testing level from staircase
-        linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
-        freq = linStimLevel/gaborDimPix;           % frequency of the gabor in cycles per pixels (easy to convert then)
-        sigma = gaborDimPix/6;                                % arbitrary - must check the best option
-        % make a properties matrix for the Gabor
-        propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
-   end 
+ % Call the function for training trials
+num_training = 5; % Number of training trials
+propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix, aspectRatio, phase, contrast);
 
  %% Eyelink Start trial
 eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
  %% display the stim
-    if doubleScreen == true % when the half cross is set, the double screen variable is set to true, therefore the stim can be displayed
-        dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), usually [0 0 1 1] when no stereomode=100
-        dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter, yCenter);
-        Screen('SelectStereoDrawBuffer',window,1);
-        Screen('DrawTextures', window, gabortex, [], dstGab_center1, angular, [], [], [], [],...
-        kPsychDontDoRotation, propertiesMat');
-        Screen('FillRect', window, black, FF2b); 
-        Screen('FillRect', window, white, FF2w);
-    
-        dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), usually [0 0 1 1] when no stereomode=100
-        dstGab_center2 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
-        Screen('SelectStereoDrawBuffer',window,0);
-        Screen('DrawTextures', window, gabortex, [], dstGab_center2, angular, [], [], [], [],...
-        kPsychDontDoRotation, propertiesMat'); 
-        Screen('FillRect', window, black, FF1b);
-        Screen('FillRect', window, white, FF1w);
-
-    else
-        Screen('DrawTextures', window, gabortex, [], [], angular, [], [], [], [],...
-    kPsychDontDoRotation, propertiesMat');
-        Screen('FillRect', window, black, FF2b);
-        Screen('FillRect', window, white, FF2w);
-    end
-
+    drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
 
     % Flip to the screen
     beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
 
     Screen('Flip', window);
-        onsetTime = GetSecs;
+    onsetTime = GetSecs;
 
 %% Eyelink recording
 % we start recording the trial here
@@ -342,38 +193,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
 %% Wait for a button press
 
-    timeSecs = KbWait;
-    [ keyIsDown, t, keyCode ] = KbCheck;
-    keyCode = find(keyCode, 1);
-   if keyIsDown
-    rt = t - onsetTime; % we record the response time (rt)
-    if contains(var_eye_link, 'true')
-        Eyelink('Message', 'KEY_PRESSED');
-    end
-
-    if keyCode == escapeKey % we can always leave the test (if glitch)
-            break;
-    elseif  keyCode==rightKey && angular == 315 % remember the code use counterclockwise instead of clockwise
-            sc.doResp(1); 
-            value = 'TRUE';
-    elseif keyCode==leftKey && angular == 45
-            sc.doResp(1);
-            value = 'TRUE';
-    else
-            sc.doResp(0);
-            value = 'FALSE';
-    end
-    KbReleaseWait;
-    % now we record the responses (not done before because it would have needed a more complicated if/else architecture)
-    if keyCode==rightKey
-        key = "right";
-    elseif keyCode==leftKey
-        key = "left";
-    else
-        key = "other";
-    end
-    fprintf('Current threshold from reversals: %0.2f +/- %0.2f\n\n', ...
-            sc.curReversalThresh, sc.curReversalError) %left it for debug purposes 
+    [rt, value, key] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc);
     
     % get the x-y shift from the center into the variable Stim_position 
     Stim_position = HC1(1:2,3) - HC2(1:2,3);
@@ -383,63 +203,19 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     %% Record/display the results
 
     temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, freq, value, key, orientation, Stim_position, EYE_TEST, AMB_EYE, rt, datetime('now')};
-            %here the calculation of the last six reversals
-            if sc.trialCount > num_training + 1 % only begins after the training trials 
-                if temps{sc.trialCount,2} ~= temps{sc.trialCount-1,2} % only records when the number of reversals change 
-                    mrt(sc.revCount,:) = {sc.revCount, freq}; % recorded in a table titled mrt
-                end
-            end
-            
-            % when the staircase is finished, we calculate the mean of
-            % reversals from the mrt table
-            if sc.isFinished
-                idx = any(mrt{:,1}>maxNumReversals-6,2); %alternative is to get all of the reversals and THEN remove some from the total in mrt_extracted                                   
-                mrt_extracted = mrt(idx,:);
-                mean_reversals = mean(mrt_extracted{:,2});
-                if isnan(mean_reversals) % in the case of having no reversals at all (get the last result)
-                    mean_reversals = freq;
-                end
-                % the mean of reversals is then recorded at the end of the
-                % table 
-                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals, 'MEAN', 'none', 0, Stim_position, EYE_TEST, AMB_EYE, 0, datetime('now')};
-            end
-                % plot staircase/values 
-            if sc.isFinished
-                plot_results(sc.isFinished, temps, mean_reversals, []);
-            else % even if not finished the plot is displayed
-                plot_results(sc.isFinished, temps, freq, []); 
-            end
-   end
+    mrt = calculateLastSixReversals(sc, temps, mrt, num_training);
+    temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE);
+    plotStaircaseValues(sc, temps, mean_reversals);
+   
    %% 'Wash' the display
    % after the stim was displayed, we wash the screen by displaying a
    % background colour surface on the stim area
+   washDisplay(window, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w);
 
-   if doubleScreen == true
-       baseRect = [0 0 200 250];
-       [xCenter, yCenter] = RectCenter(windowRect);
-       centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
-       rectColor = [1 1 1];
-       Screen('SelectStereoDrawBuffer',window,0);
-       Screen('FillRect', window, rectColor*0.5, dstGab_center1);
-       Screen('FillRect', window, black, FF1b);
-       Screen('FillRect', window, white, FF1w);
-       Screen('SelectStereoDrawBuffer',window,1);
-       Screen('FillRect', window, rectColor*0.5, dstGab_center2);
-       Screen('FillRect', window, black, FF2b);
-       Screen('FillRect', window, white, FF2w);
-       Screen('Flip', window);
-   else
-       baseRect = [0 0 200 250];
-       [xCenter, yCenter] = RectCenter(windowRect);
-       centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
-       rectColor = [1 1 1];
-       Screen('FillRect', window, rectColor*0.5, centeredRect);
-       Screen('FillRect', window, black, FF2b);
-       Screen('FillRect', window, white, FF2w);
-       Screen('Flip', window);
-   end
+   %% Stop the eyelink recording
    WaitSecs(1);
-     eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
+   eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
+     
 end
 
 %% Eyelink close edf and save
