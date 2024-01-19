@@ -1,5 +1,5 @@
 % Function to set up other parameters
-function [xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey] = setupOtherParameters(window, windowRect)
+function [xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect)
     % Hide cursor
     HideCursor();
 
@@ -17,6 +17,7 @@ function [xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceK
     downKey = KbName('DownArrow');
     escapeKey = KbName('ESCAPE');
     spaceKey = KbName('SPACE');
+    skipKey = KbName('a');
 
     % Find the center of the window
     [xCenter, yCenter] = RectCenter(windowRect);

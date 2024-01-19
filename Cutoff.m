@@ -63,7 +63,7 @@ global_param.Retest = contains(retest, 'true');
 %% Participant Information 
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
-
+current_test = 'cutoff';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross] = getParticipantInfo(global_param);
 
@@ -193,19 +193,13 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
 %% Wait for a button press
 
-    [rt, value, key] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc);
-    
-    % get the x-y shift from the center into the variable Stim_position 
-    Stim_position = HC1(1:2,3) - HC2(1:2,3);
-    Stim_position = Stim_position'; % transpose 
-    Stim_position = num2str(Stim_position);
+[rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
 
     %% Record/display the results
 
-    temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, freq, value, key, orientation, Stim_position, EYE_TEST, AMB_EYE, rt, datetime('now')};
-    mrt = calculateLastSixReversals(sc, temps, mrt, num_training);
-    temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE);
-    plotStaircaseValues(sc, temps, mean_reversals);
+    mrt = calculateLastSixReversals(sc, temps, mrt, num_training, false, []);
+    temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, [], []);
+    plotStaircaseValues(sc, temps, mean_reversals, []);
    
    %% 'Wash' the display
    % after the stim was displayed, we wash the screen by displaying a

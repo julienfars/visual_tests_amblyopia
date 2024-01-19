@@ -27,21 +27,21 @@ el.calTargetType = 'image';
 
 if isempty(stereoMode)
     if exist(CurrTest, 'var')
-        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'fixTargetBW.jpg'];
+        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'targets' '/' 'fixTargetBW.jpg'];
     else
-        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'fixTarget.jpg'];
+        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'targets' '/' 'fixTarget.jpg'];
     end
 elseif stereoMode == 100
     if exist(CurrTest, 'var')
-        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'fixTargetBW_100.jpg'];
+        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'targets' '/' 'fixTargetBW_100.jpg'];
     else
-        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'fixTarget_100.jpg'];
+        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'targets' '/' 'fixTarget_100.jpg'];
     end
 elseif stereoMode == 101
     if exist(CurrTest, 'var')
-        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'fixTargetBW_101.jpg'];
+        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'targets' '/' 'fixTargetBW_101.jpg'];
     else
-        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'fixTarget_101.jpg'];
+        el.calImageTargetFilename = ['/home/pfr545_admin/software/scripts/CUTOFF_FREQ_AND_CONTRAST' '/' 'functions' '/' 'targets' '/' 'fixTarget_101.jpg'];
     end
 end
 

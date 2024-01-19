@@ -37,6 +37,7 @@ global_param.freqs = [0.0625 0.125 0.25 0.5 0.75 1];
 
 %% parameters from the Binocular Orientation
 global_param.binoc = '?';
+global_param.binoc_normal_testing = false;
 
 %% parameters from the Dichoptic test
 % all those values are important for the VR training
