@@ -40,20 +40,11 @@ cd(filepath);
 KbName('UnifyKeyNames'); %set up the keyboard for answers 
 
 %% initialisation of eyelink
-
 [dummymode, var_eye_link] = eyelink_init(1);
 
 %% retrieve data from previous test 
-
-% will retrieve the global parameters file, and if it does not exist then 
-% it will still set the parameters but set the cutoff to 0 
-% meaning you need to specify it in the prompt (useful for debugging = still allows test run)
-if isfile("global_param.mat")
-    load("global_param.mat");
-else
-    global_param = GetGlobalVariables();
-end
-
+New_patient = []; % set to empty as the battery of tests should not start by this test
+global_param = initializeNewPatient(New_patient);
 
 %% reduced version  
 global_param = initializeReduced(global_param);
@@ -95,22 +86,9 @@ eyelink_clear_screen(var_eye_link,el)
 % Call the function to set up basic Gabor parameters
 [gaborDimPix, PixelPerDeg] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size);
 
-%% GABOR PARAMETERS
+%% Other Gabor Parameters 
 
-% Parameters for the Gabors (see help CreateProceduralGabor - psychtoolbox)
-backgroundOffset = [0.5 0.5 0.5 0.0];
-disableNorm = 1;
-preContrastMultiplier = 0.5;
-aspectRatio = 1.0;
-phase = 0;
-contrast = []; % will be calculated by the contrast procedure
-
-% Build a procedural gabor texture (Note: to get a "standard" Gabor patch
-% we set a grey background offset, disable normalisation, and set a
-% pre-contrast multiplier of 0.5).
-
-gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, [],...
-   backgroundOffset, disableNorm, preContrastMultiplier);
+[gabortex, aspectRatio, phase, contrast] = createGaborTexture(window, gaborDimPix, current_test);
 
 %% Interleaved Staircases
 
@@ -162,7 +140,7 @@ varNames2 = ["Reversal  Number", "Value", "Staircase"];
 mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
 counter_mrt = 1;
 
-%% Mean reversals table 
+%% and the mean reversals only
 % the mean reversals table is generated here (optimisation reasons)
 % this table will not be saved after the test but we use it to generate the threshold
 
@@ -199,19 +177,16 @@ doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
     % make a properties matrix for the Gabor
     propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
     
-    
-
 %% Eyelink Start trial
 eyelink_start_trial(var_eye_link, staircaseArray(iSC).trialCount, orientation, [])
 
-
  %% display the stim
 
-        drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
+drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
 
-        % Flip to the screen
-        beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
-        Screen('Flip', window);
+% Flip to the screen
+beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
+Screen('Flip', window);
 
 
 %% eyelink - start recording
@@ -221,10 +196,12 @@ eyelink_start_trial(var_eye_link, staircaseArray(iSC).trialCount, orientation, [
 
     onsetTime = GetSecs;
     [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
-
-    [mrt,counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, contrast_interleaved, counter_mrt);
-    [temps, counter_trial, mt] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, contrast_interleaved, counter_trial, mt);
-    plotStaircaseValues(sc, temps, mean_reversals, []);
+    if contains(value, 'ESCAPE')
+        break;
+    end
+    [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, contrast);
+    [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt);
+    plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, []);
 
 %% 'Wash' the display
    % after the stim was displayed, we wash the screen by displaying a
@@ -258,6 +235,6 @@ fprintf('Output saved in: %s\n', filename)
 global_param.pix_shift = diff(1:2,1);
 global_param.EYE_TEST = '?';
 
-save('global_param.mat','global_param'); % save the changes for the next tests 
+save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
 
 % end of the script 

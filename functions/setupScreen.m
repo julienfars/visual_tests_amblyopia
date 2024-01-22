@@ -1,5 +1,5 @@
 %% Function to set up screen parameters
-function [window, windowRect, width, height] = setupScreen()
+function [window, windowRect, width, height] = setupScreen(stereo)
     % Check platform for sync tests
     if ismac || isunix
         Screen('Preference', 'SkipSyncTests', 0);
@@ -27,7 +27,7 @@ function [window, windowRect, width, height] = setupScreen()
 
     % can add an if loop here --> must check the stereomode for some
     % specific scripts
-    stereoMode = 100; 
+    stereoMode = stereo; 
     PsychImaging('PrepareConfiguration');
     PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
     PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');

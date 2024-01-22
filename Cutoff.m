@@ -47,15 +47,7 @@ KbName('UnifyKeyNames'); %set up the keyboard for answers
 New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
 retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
 
-if contains(New_patient, 'true')
-    global_param = GetGlobalVariables(); % set up of a 'brand new' "global_param" structure file 
-else
-    if isfile("global_param.mat")
-        load("global_param.mat");
-    else
-        global_param = GetGlobalVariables();
-    end
-end 
+global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
 
 % Set retest variable
 global_param.Retest = contains(retest, 'true');
@@ -77,7 +69,7 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 
 %% Screen Parameters
 % Call the function to set up screen parameters
-[window, windowRect, width, height] = setupScreen();
+[window, windowRect, width, height] = setupScreen(100);
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
@@ -102,24 +94,11 @@ eyelink_clear_screen(var_eye_link,el)
 %% Basic Gabor parameters
 
 % Call the function to set up basic Gabor parameters
-[gaborDimPix, PixelPerDeg] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size);
+[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size, current_test);
 
 %% Other Gabor Parameters
 
-% Parameters for the Gabors (see help CreateProceduralGabor - Psychtoolbox)
-backgroundOffset = [0.5 0.5 0.5 0.0];
-disableNorm = 1;
-preContrastMultiplier = 0.5;
-aspectRatio = 1.0;
-phase = 0;
-contrast = 1; % set up at 100% contrast
-
-% Build a procedural gabor texture (Note: to get a "standard" Gabor patch
-% we set a grey background offset, disable normalisation, and set a
-% pre-contrast multiplier of 0.5).
-
-gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, [],...
-   backgroundOffset, disableNorm, preContrastMultiplier); % create the gabor texture from the set parameters
+[gabortex, aspectRatio, phase, contrast] = createGaborTexture(window, gaborDimPix, current_test);
 
 %% Staircase 
 % then we set up the staircase procedure
@@ -194,10 +173,12 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 %% Wait for a button press
 
 [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
-
+if contains(value, 'ESCAPE')
+        break;
+end
     %% Record/display the results
 
-    mrt = calculateLastSixReversals(sc, temps, mrt, num_training, false, []);
+    mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2));
     temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, [], []);
     plotStaircaseValues(sc, temps, mean_reversals, []);
    
@@ -232,6 +213,6 @@ fprintf('Output saved in: %s\n', filename)
 %% ending the script
 
 global_param.EYE_TEST = '?'; % ready for the next launch
-save('global_param.mat','global_param'); % save the changes for the next tests 
+save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
 
 % end of the script 

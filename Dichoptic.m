@@ -1,114 +1,74 @@
 %{
+Welcome to the battery of tests used in the Amblyopia study. 
+If you have questions about the tests, contact Juju (julien.fars@ndcn.ox.ac.uk)
+This battery aims to test various functions of the amblyopic visual experience. 
+The parameters of this test (and the subsequent ones) are extracted from the GetGlobalVariables.m script and then are stored in the
+global_param.mat variable. If you use a different setting that the one
+described in the study, please do change the parameters in
+GetGlobalVariables.m
+This battery of tests is using modified scripts from several research teams and individuals. 
+For the original version of these scripts, contact: 
+- Alex S Baldwin - McGill Vision Research (staircase protocol)
+- Jun-Yun Zhang - Beijing Key Laboratory of Behavior and Mental Health (for the Dichoptic test)
+- Alice Grasso McCaslin, School of Optometry, Indiana University (Asteroid test script and related functions)
+
+It is also important to note that some functions present in the battery of tests were inspired from the
+tutorials of Peter Scarfe - Scarfe Lab (see https://peterscarfe.com/ptbtutorials.html)
+%}
+
+%{
+                            Dichoptic test 
 Here is an attempt on making a new version (homemade) of the dichoptic
 demasking. Because it seems that all the codes I got are not flexible. 
 Attempt 1: Must find the code for the noise but the rest only concerns 
 gabors and fixation cross (+ an attention square at the beginning of each trial)
 01/03/2023 
+
+Test only done on both eyes 
 %}
 
 %% Setup
-sca;
-commandwindow; % just to be sure the command window opens
+% first we setup the screen, the workspace and the command window
+
+sca; % to clean the workspace
+commandwindow; % to open the command window
 filepath=fileparts(which('Dichoptic.m')); %determine what is the filepath of the script 
-cd(filepath); % add the filepath to matlab filepaths
-
-AssertOpenGL;
-
-%% initialisation of eyelink
-
-[dummymode, var_eye_link] = eyelink_init(1);
-
-%% retrieve data from previous test
-if isfile("global_param.mat")
-    load("global_param.mat");
-else
-    global_param = GetGlobalVariables();
-end
+cd(filepath); % add the filepath to matlab filepaths (to save the files at the end of the test)
 KbName('UnifyKeyNames'); %set up the keyboard for answers 
 
-%% Gets subject Info sets up experiment
-prompt = {'Enter subject number:', 'stimuli size', 'distance from screen', 'Which eye is amblyopic?', 'Noise contrast?', 'contrast discrimination threshold?', 'cut-off frequency', 'edf file name?', "Eye tested"}; %description of fields
-defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), 'Left', '0.1', num2str(0.55), num2str(0.15), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
-%defaults = {global_param.ID, num2str(global_param.stim_size), num2str(global_param.distance), global_param.AMB_EYE, '0.1', num2str(global_param.contrast_AE{3,4}), num2str(global_param.cut_off_AE), strcat(global_param.ID,'d'),  'Both'};%default answers - last two could be num2str(global_param.contrast_FE), num2str(global_param.contrast_AE)
+%% initialisation of eyelink
+% then we initialise the eye link
 
-answer = inputdlg(prompt, 'Parameters',2,defaults); %opens dialog
-SUBJECT = answer{1,:}; %Gets Subject Name
-SIZE = str2double(answer{2,:}); %Gets size of the stim (0.29 is from the article)
-DISTANCE = str2double(answer{3,:}); %Gets distance from the screen
-AMB_EYE = answer{4,:}; %which eye is the amblyopic one 
-NOISE = str2double(answer{5,:});% initial noise contrast
-CONTRAST = str2num(answer{6,:}); %transform text into numericals 
-CUTOFF = answer{7,:};
-fixCross = true; 
-edfFile = answer{8,:}; % should update name later, to be mindful of possible reruns
-EYE_TEST = answer{9,:};
+[dummymode, var_eye_link] = eyelink_init(1); % will return variables that indicates that the eye link is ready to start (dummymode, var_eye_link)
 
-% CUTOFF
-if contains(CUTOFF, '-') && isempty(global_param.cut_off_AE) % probably need to change this to reflect the potential absence of data
-        CUTOFF = global_param.cut_off; 
-    elseif contains(CUTOFF, '-')
-        CUTOFF = global_param.cut_off_AE;
-end
+%% Same patient? Retest? 
+% This battery of test will be performed thrice on the same session (FE, AE and BE)
+% And thrice for each participant (training, test and retest)
 
+New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
+retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
 
-CUTOFF = num2str(CUTOFF);
+global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
 
-%this part asks again about the cut-off just to be sure 
-prompt = {strcat('cut-off frequency','-',AMB_EYE)};
-%dlgtitle = AMB_EYE;
-dims = [1 7];
-definput = {CUTOFF};
-answer = inputdlg(prompt,'Parameter',dims,definput);
-CUTOFF = answer{1,:}; 
-CUTOFF = str2num(CUTOFF);
+% Set retest variable
+global_param.Retest = contains(retest, 'true');
 
+%% Participant Information 
+% calls global.param to retrive information from the screen size, distance
+% from the screen, etc...
+current_test = 'dichoptic';
+[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
+%global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the global_param structure 
 
-%% launch eyelink parameters
+%% Eyelink Parameters
+
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
 
+%% Screen Parameters
 
-%% Screen stuff
+[window, windowRect, width, height] = setupScreen(101);
 
-if ismac % only for testing purposes, check if your system is compatible when doing real experiment 
-    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-elseif isunix % linux platforms are generally fine
-    Screen('Preference', 'SkipSyncTests', 0);
-elseif ispc % only for testing purposes, check if your system is compatible when doing real experiment 
-    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-else
-    disp('Platform not supported')
-    return
-end
-
-% Here we call some default settings for setting up Psychtoolbox
-%PsychDefaultSetup(2);
-
-% Get the screen numbers. This gives us a number for each of the screens
-% attached to our computer.
-screens = Screen('Screens');
-%Screen('ConfigureDisplay', 'Dithering', 1, ditherEnable);
-%Screen('Preference', 'SuppressAllWarnings', 1); 
-% To draw we select the maximum of these numbers. So in a situation where we
-% have two screens attached to our monitor we will draw to the external
-% screen.
-screenNumber = max(screens);
-    
-% Define black and white (white will be 1 and black 0). This is because
-% in general luminace values are defined between 0 and 1 with 255 steps in
-% between. With our setup, values defined between 0 and 1.
-white = WhiteIndex(screenNumber);
-black = BlackIndex(screenNumber);
-
-% Do a simply calculation to calculate the luminance value for grey. This
-% will be half the luminace value for white
-grey = white / 2;
 bgcontrast = 0.1;
-
-stereoMode = 101; 
-PsychImaging('PrepareConfiguration');
-PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
-PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
-[window, windowRect] = PsychImaging('OpenWindow',screenNumber,[],[],[],[],stereoMode); % grey on the first []
 
 Screen('SelectStereoDrawBuffer',window,0);
 Screen('ColorRange', window, 1, 0);
@@ -118,85 +78,43 @@ Screen('SelectStereoDrawBuffer',window,1);
 Screen('ColorRange', window, 1, 0);
 Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast]); %bgcontrast
 
-% Instead of returning width and height of the graphics window/screen in pixels
-% using this [width, height] = Screen('WindowSize', window); 
-% we do 
-width = windowRect(3);
-height = windowRect(4);
 
 %% Eyelink Calibration
+% starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
+
 [el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
 
 %% Other Parameters
-HideCursor(); %hides the cursor
-KbName('UnifyKeyNames'); %used for cross-platform compatibility of keynaming
-KbQueueCreate; %creates cue using defaults
-KbQueueStart;  %starts the cue - keyboard inputs are considered now
-[xCenter, yCenter] = RectCenter(windowRect);
+[xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect);
+start_trial_key = KbName('a');
 
 %% clear screen of host PC 
+% clears the screen of the host PC so we can start the test
+
 eyelink_clear_screen(var_eye_link,el)
 
-%% Fixation Cross
-[HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereoMode);
+%% Fusion crosses/frames
+% will start if the participant has starbismus AND is testing BE 
 
-%% Gabor parameters 
+[HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereoMode); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
+[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMode); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
 
-% careful! those parameters do not follow the ones from the previous scripts - see Junjun code and Liuet al. paper for details  
-%lets calculate the proper size of the gabors 
-DIM_Screen_hor = windowRect(3)/global_param.screen_size(2); % we get the number of pixels per mm
-DIM_Screen_ver = windowRect(4)/global_param.screen_size(1);
-SIZE_mm = 2*DISTANCE*tand(SIZE/2); % convert the size of stim from dva to mm
-%gaborDimPix1 = DIM_Screen_ver*SIZE_mm; % here from mm to pix using the number of pixels per mm
-%gaborDimPix2 = DIM_Screen_hor*SIZE_mm;
+%% Basic Grating parameters
 
-pix_size = 1/DIM_Screen_ver; % the size of 1 pixel in cm 
-size_stim_pix = round(2*DISTANCE*tand(SIZE/2)/pix_size); % size of the stim in pixels, we round it so it is easier to display
+[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size);
+[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, CUTOFF, CONTRAST);
 
-E_min_size_dva = 1;
-size_dva = 2*DISTANCE*tand(E_min_size_dva/2)/pix_size;
+nGabors = 2; % number of gratings on display
+[allRects, propertiesMat] = setupGratingsParameters(xCenter, yCenter, gaborDimPix, nGabors, phase, freq, contrast_high);
 
-distance = 1500; % setup at 500mm, will make the change for display++ later
-PixelPerDeg=1/atand(1/DIM_Screen_hor/DISTANCE); % horizontal size in pix
-frequency = 0.3/CUTOFF; % inverse of the cutoff multiplied by 30% (see liu et al papers for more informations) 
-
-lamda=1/frequency;
-gaborDimPix2=ceil((frequency/3)*15*lamda*size_dva);   
-gaborDimPix1=ceil((frequency/3)*15*lamda*size_dva);  % was ceil((frequency/3)*15*lamda*PixelPerDeg)
-
-%142 to 225 = 83 = 1.13 dva
-phase=90;
-sigma=1/frequency;
-angle=0;% not used in script, from Junjun. 
-gap=100;%arcmin gap between gabor stimuli (not used) was 100
-VerCont_high = 80; % contrast in %
-VerCont_low = 80 - ((CONTRAST*100)*1.414);% as used in the paper from Liu et al. 2021 (see references)
-orientation = 90;
-
-locCx1=gaborDimPix2/2;
-locCy1=gaborDimPix1/2;
-locCy2=locCy1+gap;
-locCx2=locCx1;
-
-backgroundOffset = [0.5 0.5 0.5 0.0];
-disableNorm = 1;
-preContrastMultiplier = 0.5;
-aspectRatio = 1.0;
-phase = 0;
-contrast = 1; 
+% we draw the grating already but do not display it (efficient coding)
+Screen('DrawTexture', window, sinetex, [], [], tilt, [], [], [], [], [], [0,1,0,0]);
+Priority(MaxPriority(window));
 
 %% Staircases 
 
 % Query the frame duration
 ifi = Screen('GetFlipInterval', window);
-
-% set up of the keys used in this test
-leftKey=KbName('LeftArrow');
-rightKey=KbName('RightArrow');
-upKey=KbName('UpArrow');
-downKey=KbName('DownArrow');
-escapeKey = KbName('ESCAPE');
-spaceKey = KbName('SPACE');
 
 % these parameters control the staircase (change it to remove the extra stepSizes)
 StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 50 (log) - which should provide around 30 steps 
@@ -206,7 +124,7 @@ nRightToDescend = 3;        % number of "correct" responses before ascending
 nWrongToAscend  = 1;        % number of "incorrect" responses before descending
 maxNumTrials    = 40;       % maximum number of trials for staircase (50 without the training)
 maxNumReversals = 8;       % maximum number of reversals for staircase
-startLevel      = log10(20);%log10(20);%log10(NOISE*100);        % starting level of staircase (5 should be easy to begin with)
+startLevel      = log10(50);%log10(20);%log10(NOISE*100);        % starting level of staircase (5 should be easy to begin with)
 verbose         = 1;        % set to 1 for verbose staircase output
 
 % class constructor function returns staircase object (see staircase.m)
@@ -214,35 +132,54 @@ sc = staircase(StimLevels, initStepSize, stepSize,         ...
                nRightToDescend, nWrongToAscend, maxNumTrials, ...
                maxNumReversals, startLevel, verbose);
 
+%% Result table
+% the final results table is generated here (optimisation reasons)
+% this table will be saved in the 'data' folder as an excel table for further analyses 
 
-%% creating the results table (will be in /data folder)
 sz = [maxNumTrials+1;13];
 varTypes = ["double","double","double","double","double","string", "string", "double", "string",  "string", "string", "double","datetime"];
 varNames = ["Trial","Reversal","Level", "Contrast low", "Contrast high","value", "key", "orientation", "Position", "AMB", "Eye", "RT","time"];
 temps = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
-%% creating the mean reversals table (for the calculation of the mean/threshold)
+%% Mean reversals table 
+% the mean reversals table is generated here (optimisation reasons)
+% this table will not be saved after the test but we use it to generate the threshold
+
 mr = [maxNumReversals;2];
 varTypes2 = ["double", "double"];
 varNames2 = ["Reversal  Number", "Value"];
 mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
 
-%% setting the the values of left and right half crosses
-if contains(AMB_EYE, 'Left')
-        HC1 = HCl;
-        HC2 = HCr;
-    else
-        HC1 = HCr;
-        HC2 = HCl;
- end
-    
+ %% Start the experiment 
+
  repeatNoise = false; % used for repeating the same noise when having attention trial (UP/DOWN)
  att_test = 0; % counter for the numbers of attention tests failed 
+ doubleScreen = false;
+    % will determine which side of the crosses will be moving (along with one copy of the fusion frame)
+    if contains(AMB_EYE, 'Left') 
+            HC1 = HCl;
+            HC2 = HCr;
+            FF1w = FFLw;
+            FF1b = FFLb;
+            FF2w = FFRw;
+            FF2b = FFRb;
+        else
+            HC1 = HCr;
+            HC2 = HCl;
+            FF1w = FFRw;
+            FF1b = FFRb;
+            FF2w = FFLw;
+            FF2b = FFLb;
+    end
 
- %% launch the experiment staircase
-    doubleScreen = false;
+diff = zeros(4,1);
+rectColor = [1 1 1];
+
 while ~sc.isFinished           % keep looping until staircase concludes
     
+% run the fixing cross before the trial
+   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff] = fix_cross(fixCross,window, start_trial_key, leftKey, rightKey, upKey, downKey, spaceKey, ...
+doubleScreen, AMB_EYE, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi);
 
     StimLevel = sc.curLevel;                   % testing level from staircase
     linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
@@ -254,80 +191,13 @@ while ~sc.isFinished           % keep looping until staircase concludes
         NOISE = linStimLevel/100; % go on with the newly calculated noise
         fgcontrast = NOISE;
     end
-
-    while fixCross == true
-    
-    vbl = Screen('Flip', window);
-    waitframes = 1; 
-    exitFixCross = false;
-    while exitFixCross == false
-
-    % Check the keyboard to see if a button has been pressed
-    [keyIsDown, secs, keyCode] = KbCheck;
-    
-    % Depending on the button press, either move ths position of the square
-    % or exit the demo
-    if keyCode(escapeKey)
-        exitFixCross = true; %I doubled the while loop just to be sure it goes to the next step - must change later
-        fixCross = false;
-        doubleScreen = true;
-    elseif keyCode(leftKey) % each short press of the key moves the cross+frame of one pixel
-        HC1(1,:)  = HC1(1,:)  - pixelsPerPress;
-        HC1(3,:)  = HC1(3,:)  - pixelsPerPress;
-    elseif keyCode(rightKey)
-        HC1(1,:)  = HC1(1,:)  + pixelsPerPress;
-        HC1(3,:)  = HC1(3,:)  + pixelsPerPress;
-    elseif keyCode(upKey)
-        HC1(2,:)  = HC1(2,:)  - pixelsPerPress;
-        HC1(4,:)  = HC1(4,:)  - pixelsPerPress;
-    elseif keyCode(downKey)
-        HC1(2,:)  = HC1(2,:)  + pixelsPerPress;
-        HC1(4,:)  = HC1(4,:)  + pixelsPerPress;
-    elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the centre of the display
-         if contains(AMB_EYE, 'Left')
-            HC1 = HCl;
-            HC2 = HCr;
-            else
-            HC1 = HCr;
-            HC2 = HCl;           
-         end
-    end
-    
-       % Draw the half crosses to the screen
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, black, HC1);
-
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, black, HC2);
-
-    % Flip to the screen
-    vbl  = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-    
-    if contains(AMB_EYE, 'Left')
-        diff(:,1) = HC1(:,1)-HCl(:,1); %
-    else
-        diff(:,1) = HC1(:,1)-HCr(:,1); %
-    end
-    end
-    baseRect = [0 0 200 250];
-    [xCenter, yCenter] = RectCenter(windowRect);
-    centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
-    rectColor = [1 1 1];
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, rectColor*0.5, HC1);
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, rectColor*0.5, HC2);
-    Screen('Flip', window);
-    WaitSecs(1);
-
-    end
     
     % here the code to generate the noise 
-    texSize = 1010; %size in pixels, was 240
+    texSize = 252; %size in pixels, was 240
     %texSize = 4.4 * size_dva; % would be too small 
     %x = meshgrid(-texSize/2+1:texSize/2, -texSize/2+1:texSize/2);
     
-    noise = bandpass_noise_maker(1010,5.5,240); % was 240,5.5,240
+    noise = bandpass_noise_maker(252,5.5,240); % was 240,5.5,240
 %{
     for i=1:texSize+1
             for j=1:texSize+1
@@ -339,113 +209,27 @@ while ~sc.isFinished           % keep looping until staircase concludes
     end
 %}
 
-    smoothedNoise = noise*NOISE;
+    smoothedNoise = noise*NOISE; % careful
     noiseTexture = Screen('MakeTexture', window, smoothedNoise, [], [], 1);
     
-% here is the arrows
-    % first let's get the size of the noise 
-    sidesize = 390;% was 240
-    dstGab_centerN = [0 0 1 0.5] .* sidesize;
-    dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
-
-    xhead = xCenter;%1
-    xheadleft = xCenter-(sidesize/4);%2
-    xheadright = xCenter+(sidesize/4);%3
-    xbaseleft = xCenter-(sidesize/8); %4
-    xbaseright = xCenter+(sidesize/8);%5
-
-    %DOWN
-    yhead = yCenter+(sidesize/6);
-    yheadside = yCenter;
-    ybase = yCenter-(sidesize/6);
-
-    %the UP and DOWN 
-    xPosVectorUP = [xhead xheadright xbaseright xbaseright xbaseleft xbaseleft xheadleft xhead]; % is it the down one?Yes
-    yPosVectorUP = [yhead yheadside yheadside ybase ybase yheadside yheadside yhead];
-    
-    % fixed 
-    xPosVectorDOWN = [xhead xheadright xbaseright xbaseright xbaseleft xbaseleft xheadleft xhead]; % this is the up one?Yes 
-    yPosVectorDOWN = [ybase yheadside yheadside yhead yhead yheadside yheadside ybase];
-
-    UP_side = [xPosVectorUP; yPosVectorUP];
-    DOWN_side = [xPosVectorDOWN; yPosVectorDOWN];
-    % Cue to tell PTB that the polygon is convex (concave polygons require much
-    % more processing)
-    isConvex = 1;
-
-    if rand<0.5 % for each trial the orientation is set randomly, careful, it is reversed 
-        %counterclockwise instead of clockwise!!!!!
-    angular = 45;
-    %orientation = 315;
-    orientation = 90-45;
-    else 
-    angular = 315;
-    %orientation = 45;
-    orientation = 90+45;
-    end
-
+    %% other parameters
     [seed,whichGen] = ClockRandSeed();
 
     EccH=420;
     centerHsti=round(windowRect(3))/2-EccH;
+    waitTime = 0.2; % the time of presentation (200ms)
 
-    %change 80 by 0.8 if needed (80 in %)
-    if rand<0.5 
-       Gabor_up=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_low, frequency, sigma, phase, orientation+90, locCx1, locCy1-gap);
-       Gabor_down=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_high, frequency, sigma, phase, orientation+90, locCx2, locCy2);
+%% Arrows
+    [UP_side, DOWN_side, isConvex] = setupArrows(xCenter, yCenter, 240); % 240 is the size of the arrows in pixel 
 
-       ComGabor=Gabor_up+Gabor_down;
-       StimPatch=round((ComGabor+1)/2*255);
-       gabortex=Screen('MakeTexture',window,StimPatch);
-       ARROW_X = xPosVectorUP;
-       ARROW_Y = yPosVectorUP;
-       
-       acc_resp = 'bottom';
-    else 
-       Gabor_up=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_high, frequency, sigma, phase, orientation+90, locCx1, locCy1-gap);
-       Gabor_down=makeGabor(PixelPerDeg, 1, gaborDimPix2, 1, gaborDimPix1, VerCont_low, frequency, sigma, phase, orientation+90, locCx2, locCy2);
-
-       ComGabor=Gabor_up+Gabor_down;
-       StimPatch=round((ComGabor+1)/2*255);
-       gabortex=Screen('MakeTexture',window,StimPatch);
-
-       ARROW_X = xPosVectorDOWN;
-       ARROW_Y = yPosVectorDOWN;
-
-       acc_resp = 'top';
-    end
-
-    sum_zero = sum(Gabor_up(:,locCy1)==0);
-    proportion = 1-(sum_zero/length(Gabor_up));
-    gaborDimPix = round(((DIM_Screen_ver*SIZE_mm+DIM_Screen_hor*SIZE_mm)/2)/proportion); % we round it so we can keep a regular dva 
-
-    if rand<0.2 %rand<0.2
-       ATT_TRIAL = 'true';
-    else 
-        ATT_TRIAL = 'false';
-    end
-
-    % here the primer coordinates
-    LeftTopCorner = HC1(1:2,3);
-    RightTopCorner = HC1(1:2,4);
-    LeftBottomCorner = HC1(1:2,5);
-    RightBottomCorner = HC1(1:2,6);
-    ARROWLT_1 = [LeftTopCorner(1); LeftTopCorner(2); LeftTopCorner(1)+20; LeftTopCorner(2)+5];
-    ARROWLT_2 = [LeftTopCorner(1); LeftTopCorner(2); LeftTopCorner(1)+5; LeftTopCorner(2)+20];
-    ARROWLT = [ARROWLT_1,ARROWLT_2];
-
-    ARROWRT_1 = [RightTopCorner(1)-20+90; RightTopCorner(2); RightTopCorner(1)+90; RightTopCorner(2)+5];
-    ARROWRT_2 = [RightTopCorner(1)-5+90; RightTopCorner(2); RightTopCorner(1)+90; RightTopCorner(2)+20];
-    ARROWRT = [ARROWRT_1,ARROWRT_2];
-
-    ARROWLB_1 = [LeftBottomCorner(1); LeftBottomCorner(2)-5+45; LeftBottomCorner(1)+20; LeftBottomCorner(2)+45];
-    ARROWLB_2 = [LeftBottomCorner(1); LeftBottomCorner(2)-20+45; LeftBottomCorner(1)+5; LeftBottomCorner(2)+45];
-    ARROWLB = [ARROWLB_1,ARROWLB_2];
-
-    ARROWRB_1 = [RightBottomCorner(1)-20+90; RightBottomCorner(2)-5+45; RightBottomCorner(1)+90; RightBottomCorner(2)+45];
-    ARROWRB_2 = [RightBottomCorner(1)-5+90; RightBottomCorner(2)-20+45; RightBottomCorner(1)+90; RightBottomCorner(2)+45];
-    ARROWRB = [ARROWRB_1,ARROWRB_2];
-    penWidthPixels = 6;
+%% Randomisers 
+    [orientation, propertiesMat, ARROW_X, ARROW_Y, acc_resp, ...
+    ATT_TRIAL] = setupDichopticRandomisers(contrast_low, contrast_high, ...
+    xPosVectorUP, yPosVectorUP, xPosVectorDOWN, yPosVectorDOWN, ...
+    propertiesMat);
+   
+%% Primer coordinates 
+    [ARROWLT, ARROWRT, ARROWLB, ARROWRB, penWidthPixels] = setupPrimerCoordinates(HC1);
 
     %% Eyelink Start trial
 eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
@@ -454,269 +238,38 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 [err] = eyelink_start_recording(var_eye_link);
 
     
-%% AMB LEFT - TRIAL FALSE
-    if contains(AMB_EYE, 'Left') && contains(ATT_TRIAL, 'false')
+%% Trials 
+    if contains(ATT_TRIAL, 'false')
 
-    % here the primer (to get attention from the participant - do not confuse it with the attention trials)
-    repeatNoise = false;
-
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, black, ARROWLT, penWidthPixels);
-    Screen('FillRect', window, black, ARROWRT, penWidthPixels);
-    Screen('FillRect', window, black, ARROWLB, penWidthPixels);
-    Screen('FillRect', window, black, ARROWRB, penWidthPixels);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, rectColor*0.5, HC1);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-   
-
-    
-    % then we launch the gabors and noise
-    dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
-    dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-    
-
-
-    dstGab_centerN = [0 0 1 0.5] .* texSize;
-    dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
-
-    Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1); % was 500
-    Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
-
-
-    Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
-    Screen('DrawingFinished', window);
-
-
-
-
-%% AMB RIGHT - NO TRIAL
-    elseif contains(AMB_EYE, 'Right') && contains(ATT_TRIAL, 'false') 
-    
-    repeatNoise = false;
-
-    % here the primer (to get attention from the participant - do not confuse it with the attention trials)
-   
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, black, ARROWLT,penWidthPixels);
-    Screen('FillRect', window, black, ARROWRT,penWidthPixels);
-    Screen('FillRect', window, black, ARROWLB,penWidthPixels);
-    Screen('FillRect', window, black, ARROWRB,penWidthPixels);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, rectColor*0.5, HC1);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-    
-  
- % then we launch the gabors and noise
-    dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
-    dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTextures', window, gabortex, [], dstGab_center1); %bottom gabor
-
-
-    dstGab_centerN = [0 0 1 0.5] .* texSize;
-    dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
-
-    Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1);
-    Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
-
-    Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
-    Screen('DrawingFinished', window);
-
+    [repeatNoise] = drawGratings_dichoptic(window, black, ARROWLT, ...
+    ARROWRT, ARROWLB, ARROWRB, penWidthPixels, rectColor, HC1, ...
+    waitTime, sinetex, allRects, orientation, propertiesMat, ...
+    texSize, xCenter, yCenter, bgcontrast, fgcontrast, ...
+    noiseTexture, AMB_EYE);
  
-    %% AMB LEFT - TRIAL TRUE
-    elseif  contains(AMB_EYE, 'Left') && contains(ATT_TRIAL, 'true')
-% here the primer (to get attention from the participant - do not confuse it with the attention trials)
-    repeatNoise = true;
-    repNOISE = NOISE;
-    
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, black, ARROWLT,penWidthPixels);
-    Screen('FillRect', window, black, ARROWRT,penWidthPixels);
-    Screen('FillRect', window, black, ARROWLB,penWidthPixels);
-    Screen('FillRect', window, black, ARROWRB,penWidthPixels);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('FillRect', window, rectColor*0.5, HC1);
-    Screen('Flip', window);
-    WaitSecs(0.2);    
-    
-   % put the arrow here 
-    Screen('SelectStereoDrawBuffer',window,1);
+    elseif  contains(ATT_TRIAL, 'true')
 
-    dstGab_centerN = [0 0 1 0.5] .* texSize;
-    dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
-
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
-
-    Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1); %was 500
-    Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
-
-    Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
-
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillPoly', window, white, [ARROW_X; ARROW_Y]', isConvex);
-    Screen('DrawingFinished', window);
-
-
-    %% AMB RIGHT - TRIAL TRUE
-    elseif contains(AMB_EYE, 'Right') && contains(ATT_TRIAL, 'true')
-    % here the primer (to get attention from the participant - do not confuse it with the attention trials)
-    repeatNoise = true;
-    repNOISE = NOISE;
-
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, black, ARROWLT,penWidthPixels);
-    Screen('FillRect', window, black, ARROWRT,penWidthPixels);
-    Screen('FillRect', window, black, ARROWLB,penWidthPixels);
-    Screen('FillRect', window, black, ARROWRB,penWidthPixels);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('FillRect', window, rectColor*0.5, HC1);
-    Screen('Flip', window);
-    WaitSecs(0.2);
-
-
-    % put the arrow here 
-    Screen('SelectStereoDrawBuffer',window,0);
-    dstGab_centerN = [0 0 1 0.5] .* texSize;
-    dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
-
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
-
-    Screen('Blendfunction', window, GL_ONE, GL_ZERO);
-    Screen('DrawDots', window, [xCenter yCenter], 1500, [0.5 0.5 0.5 fgcontrast], [], 1);
-    Screen('Blendfunction', window, GL_DST_ALPHA, GL_ONE);
-
-    Screen('DrawTextures', window, noiseTexture, [], dstGab_centerN, [], 0);
-
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillPoly', window, white, [ARROW_X; ARROW_Y]', isConvex);
-    Screen('DrawingFinished', window);
-
+    [repeatNoise] = drawAttentionCue(window, black, ARROWLT, ...
+    ARROWRT, ARROWLB, ARROWRB, penWidthPixels, rectColor, HC1, ...
+    waitTime, texSize, xCenter, yCenter, bgcontrast, fgcontrast, ...
+    noiseTexture, ARROW_X, ARROW_Y, isConvex, white);
 
     end
 
     % Flip to the screen
-    beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
+     % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
     Screen('Flip', window);
 
     
 %% Wait for a button press
 
     onsetTime = GetSecs;
-    WaitSecs(0.2);
-    
-    baseRect = [0 0 512 256];
-    [xCenter, yCenter] = RectCenter(windowRect);
-    centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
-    rectColor = [1 1 1];
-    dstGab_center = [0 0 1 0.5] .* gaborDimPix; %use this instead of gaborDimPix for changing the vertical size :), use for both gabor [0 0 1 1]
-    dstGab_center1 = CenterRectArrayOnPoint(dstGab_center, xCenter+diff(1,:), yCenter+diff(2,:));
-    if contains(AMB_EYE, 'Left') 
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_center1);
-    else 
-    Screen('SelectStereoDrawBuffer',window,0);
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_center1);
-    Screen('SelectStereoDrawBuffer',window,1);
-    Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
-    end
-    Screen('DrawingFinished', window);
+    time_presentation_function(window, gaborDimPix, xCenter, yCenter, diff, black, white, FF1b, FF1w, FF2b, FF2w, current_test, false, 0.2)
     Screen('Flip', window);
-    
+
     % Wait for a button press
- 
-    timeSecs = KbWait;
-    [ keyIsDown, t, keyCode ] = KbCheck;
-    keyCode = find(keyCode, 1);
-    %think about changing the loops so if the participant choose a key that
-    %is not defined, the trial does not change
-   if keyIsDown
-    rt = t - onsetTime;
-       if contains(var_eye_link, 'true')
-        Eyelink('Message', 'KEY_PRESSED');
-       end    
-    if repeatNoise == false
-        if keyCode == escapeKey
-                break;
-        elseif  keyCode==upKey && contains(acc_resp, 'top')
-                sc.doResp(1); 
-                value = 'TRUE';
-        elseif  keyCode==downKey && contains(acc_resp, 'bottom')
-                sc.doResp(1);
-                value = 'TRUE';
-        else
-                sc.doResp(0);
-                value = 'FALSE';
-        end
-    else 
-        if keyCode == escapeKey
-                break;
-        elseif  keyCode==upKey && contains(acc_resp, 'top')
-                value = 'ATT_TRUE';
-        elseif  keyCode==downKey && contains(acc_resp, 'bottom')
-                value = 'ATT_TRUE';
-        else
-                value = 'ATT_FALSE';
-                att_test = att_test+1;
-                if att_test >= 5
-                    break
-                end
-        end
-        sc.trialCount = sc.trialCount+1;
-    end
-
-    KbReleaseWait;
-    if keyCode==upKey
-        key = "up";
-    elseif keyCode==downKey
-        key = "down";
-    else
-        key = "other";
-    end
-    fprintf('Current threshold from reversals: %0.2f +/- %0.2f\n\n', ...
-            sc.curReversalThresh, sc.curReversalError)
-    
-
-    % get the x-y shift from the center into the variable Stim_position 
-    Stim_position = HC1(1:2,3) - HC2(1:2,3);
-    Stim_position = Stim_position'; % transpose 
-    Stim_position = num2str(Stim_position);
-
-    temps(sc.trialCount,:) = {sc.trialCount, sc.revCount, NOISE, VerCont_low, VerCont_high, value, key, orientation, Stim_position, AMB_EYE, EYE_TEST, rt, datetime('now')};
-    
-            %here the calculation of the last six reversals
-            if sc.trialCount > 1 % only begins after the training trials 
-                if temps{sc.trialCount,2} ~= temps{sc.trialCount-1,2} % only records when the number of reversals change 
-                    mrt(sc.revCount,:) = {sc.revCount, NOISE}; % recorded in a table titled mrt
-                end
-            end
+    [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temps, counter_trial); 
+    [mrt,counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, counter_mrt, NOISE, []);
             
             % when the staircase is finished, we calculate the mean of
             % reversals from the mrt table
@@ -727,7 +280,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
                 % the mean of reversals is then recorded at the end of the
                 % table
                 %careful not working here, MUST FIX
-                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,VerCont_low, VerCont_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
+                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,contrast_low, contrast_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
             end
                 %here the function for the plot staircase/values (needs to be modified for compatibility with all the tests)
             if sc.isFinished
@@ -739,11 +292,12 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
            Eyelink('Message', 'BLANK_SCREEN');
            WaitSecs(0.1); % Add 100 msec of data to catch final events before stopping
            Eyelink('StopRecording'); % Stop tracker recording
-    end
-
    end
+
+   
   
 end
+Priority(0);
 
 % eyelink - close the edf file
  newName = ['Dichoptic_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
@@ -753,7 +307,7 @@ end
 %% Clear screen
 sca;
 
-%% results table
+%% Results table
 % export data table from staircase object into an xls file
 baseFileName = SUBJECT + "_" + date + '_dichoptic';
 
@@ -764,5 +318,11 @@ writetable(temps,filename)
 
 fprintf('Output saved in: %s\n', filename)
 
-save('global_param.mat','global_param'); % save the changes for the next tests 
+%% ending the script
+global_param.dichop = NOISE; 
+global_param.dichop_contrast_high = contrast_high;
+global_param.dichop_contrast_low = contrast_low;
 
+save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
+
+% end of the script 

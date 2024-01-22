@@ -1,17 +1,31 @@
-% Asteriodcomputer4AFC_nlp11
+%{
+Welcome to the Amblyopia Study Test Battery.
+
+This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
+If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
+
+Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
+
+This battery utilizes modified scripts from different researchers:
+- Alex S Baldwin (Staircase protocol)
+- Jun-Yun Zhang (Dichoptic test)
+- Alice Grasso McCaslin (Asteroid test script)
+
+Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
+%}
+
 %{
 This script is adapted from the script from ... et al (...)
-For more information about the experiment, contact them 
+Contact them for more information about the test
 
 - modifications
     - use of Display++ stereodisplay (use of passive 3D glasses)
     - modification of ChangeDotColours and ChangeDotCOloursTarget.m 
         these 2 script were using an outdated RGBA codex, was updated 
-    - modifications of the dots into ovals (because we use a single screen)
-    - modifications of the size of the areas of dots but kept the size of
-    the dots relative to the distance
-
-Juju (email)
+    - modifications of the dots into ovals (because we use a single screen
+    for 3D) --> See stereotest for psychtoolbox single screen help pages
+    - modifications of the sizes of the 4 areas of the stimulus but I kept the size of
+    the dots relative to the distance (same dva)
 %}
 
 %% Setup
@@ -19,45 +33,24 @@ sca;
 commandwindow;
 filepath=fileparts(which('Asteroid.m')); % former name = ASTEROIDCOMPUTER4AFC_nlp11.m
 cd(filepath);
+KbName('UnifyKeyNames'); %set up the keyboard for answers 
 
 %% initialisation of eyelink
 [dummymode, var_eye_link] = eyelink_init(1);
 
-%% retrieve data from previous test (not very useful here - can be removed if necessary)
+%% retrieve data from previous test 
+New_patient = []; % set to empty as the battery of tests should not start by this test
+global_param = initializeNewPatient(New_patient);
 
-% will retrieve the global parameters file, and if it does not exist then 
-% it will create the file to record/extract basic parameters
-if isfile("global_param.mat")
-    load("global_param.mat");
-else
-    global_param = GetGlobalVariables();
-end
-
-KbName('UnifyKeyNames'); %set up the keyboard for answers 
-
-
-%% Gets subject Info sets up experiment 
-
-prompt = {'Enter subject number:', 'distance from screen', 'Which eye is amblyopic?', 'fixation cross?', 'edf file name?', 'Eye tested'}; %description of fields
-defaults = {global_param.ID, num2str(global_param.distance), global_param.AMB_EYE, 'true', strcat(global_param.ID,'as'), 'Both'};%size and distance can be extracted to get the right gabor size/frequency
-answer = inputdlg(prompt, 'Parameters',2,defaults); %opens dialog
-SUBJECT = answer{1,:}; %Gets Subject Name
-DISTANCE = str2num(answer{2,:}); %Gets distance from the screen
-AMB_EYE = answer{3,:}; %which eye is the amblyopic one --> for the datafile
-fixCross = answer{4,:}; %used later in the code, use false for monocular tests
-edfFile = answer{5,:}; % should update name later, to be mindful of possible reruns
-EYE_TEST = answer{6,:};
-
-fixCross = strcmp(fixCross,'true'); %convert string to boolean
-
-global_param = GetGlobalVariables();
-
-CurrentTime = datetime('now', 'Format','yyyy/MM/dd');
-CurrTest = 'asteroid';
+%% Participant Information 
+% calls global.param to retrive information from the screen size, distance
+% from the screen, etc...
+current_test = 'asteroid';
+% Call the function to get participant information
+[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross] = getParticipantInfo(global_param);
 
 %% launch eyelink parameters
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
-
 
 %% Inits
 nlp_timer_1 = GetSecs;
@@ -66,93 +59,16 @@ nlp_t_R       = [];
 nlp_t_both    = [];
 
 DEBUG = 0; %runs real test when at 0
-AssertOpenGL % NLP 6/7/2016
-PsychDefaultSetup(2);
-scrnNum = max(Screen('Screens'));
-%ListenChar(2);%%This line avoids writing in the code when pressing keys NLP turning this back on 6/20/2016
-rand('twister',sum(100*clock));
-
-%% parameters init
-
 [expt] = asteroid_param(SUBJECT,AMB_EYE, EYE_TEST);
+[window, windowRect, expt, blueRectLeftOn, blueRectLeftOff, ...
+    blueRectRightOn, blueRectRightOff, width, height, white, ...
+    black, oldSyncLevel, screenNumber, stereomode, SIZE_X, SIZE_Y] = setupScreen_asteroid(fixCross, expt);
 
-%% Keyboard init
+%% Other Parameters
+[keycode, LEFT, RIGHT, DOWN, UP, SPACE, exit, top_leftKey, top_rightKey, bottom_leftKey, bottom_rightKey] = setupOtherParameters_asteroid();
 
-% Keypresses that abort the expt
-keycode = zeros(1,256);
-KbName('UnifyKeyNames');
-LEFT  = KbName('LeftArrow');
-RIGHT = KbName('RightArrow');
-DOWN  = KbName('DownArrow');
-UP    = KbName('UpArrow');
-SPACE = KbName('SPACE');
-
-exit            = KbName('ESCAPE');
-top_leftKey     = KbName('UpArrow');% KbName('a'); % see if we can set up multiple keys on the same variable
-top_rightKey    = KbName('k');
-bottom_leftKey  = KbName('DownArrow');%KbName('z');% see if we can set up multiple keys on the same variable
-bottom_rightKey = KbName('m');
-
-
-%% filename + save of expt parameters 
-
-filename = strrep(strrep(['data/ASTEROIDCOMPUTER4AFC_' expt.subject '_' datestr(now) '.mat'],' ','_'),':','-');
-
-%% Initialise PTB Screen
-
-white = WhiteIndex(scrnNum);
-black = BlackIndex(scrnNum);
-if ismac % only for testing purposes, check if your system is compatible when doing real experiment 
-    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-elseif isunix % linux platforms are generally fine
-    Screen('Preference', 'SkipSyncTests', 0);
-elseif ispc % only for testing purposes, check if your system is compatible when doing real experiment 
-    oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
-else
-    disp('Platform not supported')
-    return
-end
-screens = Screen('Screens');
-screenNumber = max(screens);
-
-
-% was added for the display++ setting 
-if fixCross == true 
-    stereoMode = 100; % 100; %will fix later, need to do diagnostics first 
-    PsychImaging('PrepareConfiguration');
-    PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
-    PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
-    [window, windowRect] = PsychImaging('OpenWindow',0,expt.bgcol,[],[],2,[],expt.multisample,stereoMode);
-else % alternative only used for debugging purposes 
-    stereoMode = [];
-    PsychImaging('PrepareConfiguration');
-    PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
-    [window, windowRect]=PsychImaging('OpenWindow',0,expt.bgcol,[],[],2,[],expt.multisample,0);
-end
-
-blueRectLeftOn   = [0,                 windowRect(4)-1, windowRect(3)/4,   windowRect(4)];
-blueRectLeftOff  = [windowRect(3)/4,   windowRect(4)-1, windowRect(3),     windowRect(4)];
-blueRectRightOn  = [0,                 windowRect(4)-1, windowRect(3)*3/4, windowRect(4)];
-blueRectRightOff = [windowRect(3)*3/4, windowRect(4)-1, windowRect(3),     windowRect(4)];
-
-%Screen('FillRect',window, 0.5);
-Screen('Flip',    window);
-% 6/7/2016
-Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-%Work out timing
-ifi=Screen('GetFlipInterval', window);
-expt.framespersec=round(1/ifi); %% framerate HZ
-
-SIZE_X=expt.nx;%expt.sizeimageX;
-SIZE_Y=expt.ny;%expt.sizeimageY;
-
-% Instead of returning width and height of the graphics window/screen in pixels
-% using this [width, height] = Screen('WindowSize', window); 
-% we do 
-width = windowRect(3);
-height = windowRect(4);
-
+%% filename 
+filename = 'data/' + expt.subject + "_" + date + '_asteroid';
 
 %% Eyelink Calibration
 [el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
@@ -169,8 +85,6 @@ Screen('DrawText',  window, 'Click "esc" to start', expt.nx/2-205, 220, [255 255
 Screen('LoadNormalizedGammaTable',window,linspace(0,(255/256),256)'*ones(1,3));
 
 Screen(window,'Flip');
-
-HideCursor;
 
 keyCode(1:256)=0;
 while (keyCode(top_leftKey)==0 && keyCode(top_rightKey)==0 && keyCode(bottom_leftKey)== 0 && keyCode(bottom_rightKey)==0 && keyCode(KbName('ESCAPE'))==0)
@@ -197,6 +111,9 @@ stereocue           = 1;
 passedblindnesstest = 0; %nlp skip part yes or no
 correctnumber       = 0;
 ntrials             = 0;
+
+
+% should make a function out of the whole blindnesstest? 
 
 while ~passedblindnesstest
    
@@ -235,134 +152,12 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
          % 90ms expired
          nlp_timer_1 = GetSecs;    % reset timer
                   
-         for SQUARE=1:4
-
-            Position=randposition(SQUARE);
-            
-            disparity_arcsec=(10^log_disparity);
-            disparity_pixels=((10^log_disparity)*expt.nx)/(expt.degreesfullscreenX*3600);%%PIXELS
-            
-            tgtxcen = expt.tgtxcen(Position);
-            tgtycen = expt.tgtycen(Position);
-            
-            % Background dots:
-            % Pick random locations:
-            dotXpixBG = rand(1,expt.nBGdots) * expt.stimNpixX;
-            dotYpixBG = rand(1,expt.nBGdots) * expt.stimNpixY; %dotYpixBG = rand(1,expt.nBGdots) * (expt.stimNpixY);
-            dotcolBG = ChooseDotColors(expt.nBGdots);
-            
-            % TARGET_Position patch of dots:
-            % Generate random dot positions for TGT
-            dotXpixTG = tgtxcen-expt.tgtXsizepix/2 + rand(1,expt.nTGdots) * expt.tgtXsizepix;
-            dotYpixTG = tgtycen-expt.tgtYsizepix/2 + rand(1,expt.nTGdots) * expt.tgtYsizepix;
-            
-            dotXpixBG1 = tgtxcen-expt.BGXsizepix/2 + rand(1,expt.nBGdots) * expt.BGXsizepix;
-            dotYpixBG1 = tgtycen-expt.BGYsizepix/2 + rand(1,expt.nBGdots) * expt.BGYsizepix;
-            dotcolBG1 = ChooseDotColors(expt.nBGdots);
-            
-            % Now apply the disparity: We apply -disp/2 to the bg  and +bg/2 to the tgt so
-            % that the relative disparity is as specified.
-            %qdisp = trial.dispamplitudepix/4;
-            %qdisp=(10.^(expt.disparity_indisparity_arcsec) / expt.disparity_arcsecperpix)/4
-            dotXpixBGL = dotXpixBG1-disparity_pixels/4;%%%Units in pixels
-            dotXpixBGR = dotXpixBG1+disparity_pixels/4;%%%Units in pixels
-            if SQUARE==1
-               
-               dotcolTG = ChooseDotColorsTarget(expt.nTGdots,stereocue);
-               
-               dotXpixTGL = dotXpixTG+disparity_pixels/4;%%%Units in pixels
-               dotXpixTGR = dotXpixTG-disparity_pixels/4;%%%Units in pixels
-            else
-               dotcolTG = ChooseDotColors(expt.nTGdots);
-               
-               dotXpixTGL = dotXpixTG-disparity_pixels/4;%%%Units in pixels
-               dotXpixTGR = dotXpixTG+disparity_pixels/4;%%%Units in pixels
-            end
-            
-            % Remove any BG dots which fall in the shifted position of the tgt:
-            % Left eye: TARGET_Position is centred on x=tgtxcen-qdisp after the shift, y=tgtycen as no vertical disparity:
-            jkeepL = find( ~ ( abs(dotXpixBGL-tgtxcen-disparity_pixels/4)<(expt.tgtXsizepix)/2 & abs(dotYpixBG1-tgtycen)<(expt.tgtYsizepix)/2 ));
-            dotXpixBGL = dotXpixBGL(jkeepL);
-            dotYpixBGL = dotYpixBG1(jkeepL);
-            dotcolBGL = dotcolBG1(:,jkeepL);
-            
-            %disparity_pixels/4Right eye: TARGET_Position is centred on tgtxcen+qdisp after the shift y=tgtycen as no vertical disparity:
-            jkeepR = find( ~ ( abs(dotXpixBGR-tgtxcen+disparity_pixels/4)<(expt.tgtXsizepix)/2 & abs(dotYpixBG1-tgtycen)<(expt.tgtYsizepix)/2 ));
-            dotXpixBGR = dotXpixBGR(jkeepR);
-            dotYpixBGR = dotYpixBG1(jkeepR);
-            dotcolBGR = dotcolBG1(:,jkeepR);
-            
-            if SQUARE==1
-               dotxL1   = [dotXpixTGL  dotXpixBGL]; % wait! is it why there is an issue? use 'cat(2,dotXpixTGL,dotXpixBGL);'?
-               dotxL1   = round(dotxL1); %added --> not working!!!!!
-               dotyL1   = [dotYpixTG   dotYpixBGL];
-               dotyL1   = round(dotyL1); %added
-               dotcolL1 = [ dotcolTG dotcolBGL];
-               dotxR1   = [dotXpixTGR  dotXpixBGR];
-               dotxR1   = round(dotxR1); %added
-               dotyR1   = [dotYpixTG   dotYpixBGR];
-               dotyR1   = round(dotyR1); %added
-               dotcolR1 = [dotcolTG    dotcolBGR ];
-            end
-            if SQUARE==2
-               dotxL2= [dotXpixTGL dotXpixBGL];
-               dotxL2   = round(dotxL2); %added
-               dotyL2 = [dotYpixTG dotYpixBGL];
-               dotyL2   = round(dotyL2); %added
-               dotcolL2 = [ dotcolTG dotcolBGL];
-               dotxR2 = [dotXpixTGR dotXpixBGR];
-               dotxR2   = round(dotxR2); %added
-               dotyR2 = [dotYpixTG dotYpixBGR];
-               dotyR2   = round(dotyR2); %added
-               dotcolR2 = [ dotcolTG dotcolBGR];
-            end
-            
-            if SQUARE==3
-               dotxL3= [dotXpixTGL dotXpixBGL];
-               dotxL3   = round(dotxL3); %added
-               dotyL3 = [dotYpixTG dotYpixBGL];
-               dotyL3   = round(dotyL3); %added
-               dotcolL3 = [ dotcolTG dotcolBGL];
-               dotxR3 = [dotXpixTGR dotXpixBGR];
-               dotxR3   = round(dotxR3); %added
-               dotyR3 = [dotYpixTG dotYpixBGR];
-               dotyR3   = round(dotyR3); %added
-               dotcolR3 = [ dotcolTG dotcolBGR];
-            end
-            if SQUARE==4
-               dotxL4= [dotXpixTGL dotXpixBGL];
-               dotxL4   = round(dotxL4); %added
-               dotyL4 = [dotYpixTG dotYpixBGL];
-               dotyL4   = round(dotyL4); %added
-               dotcolL4 = [ dotcolTG dotcolBGL];
-               dotxR4 = [dotXpixTGR dotXpixBGR];
-               dotxR4   = round(dotxR4); %added
-               dotyR4 = [dotYpixTG dotYpixBGR];
-               dotyR4   = round(dotyR4); %added
-               dotcolR4 = [ dotcolTG dotcolBGR];
-            end
-            
-
-         end % for square
-         
-         dotxL   = [dotxL1   dotxL2   dotxL3   dotxL4   ];
-         dotyL   = [dotyL1   dotyL2   dotyL3   dotyL4   ];
-         dotcolL = [dotcolL1 dotcolL2 dotcolL3 dotcolL4 ];
-         dotcolL = round(dotcolL);
-         
-         dotxR   = [dotxR1   dotxR2   dotxR3   dotxR4   ];
-         dotyR   = [dotyR1   dotyR2   dotyR3   dotyR4   ];
-         dotcolR = [dotcolR1 dotcolR2 dotcolR3 dotcolR4 ];
-         dotcolR = round(dotcolR);
+         [dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = SQUARE_LOOP(expt, log_disparity, stereocue);
 
       end % nlp getsec loop
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-      %Screen('FillRect',window,expt.bgcol);  % Erase this buffer
-      % where dots are drawn relative to:
-      %cen = [(expt.nx-expt.stimNpixX)/2 (expt.ny-expt.stimNpixY)/2]; %needed to change that to appoint for the size of the screen 
-     
       % Have to draw circular dots, otherwise I don't get anti-aliasing.
       dotarrayL = [dotxL; dotyL ];
       dotarrayR = [dotxR; dotyR ];
@@ -710,8 +505,6 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
             %
             
             nlp_timer_1 = GetSecs;    % reset timer
-
-            %WaitSecs((1/expt.tempfreq)-(1/expt.framespersec));
             
             for SQUARE=1:4
                

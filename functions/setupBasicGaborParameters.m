@@ -1,5 +1,5 @@
 %% Function to set up basic Gabor parameters
-function [gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, screen_size, distance, stim_size, DISTANCE, FREQS_test)
+function [gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, screen_size, distance, stim_size, DISTANCE, FREQS_test, current_test)
     % Calculate pixels per mm for the screen's width and height
     DIM_Screen_hor = windowRect(3) / screen_size(1);
     DIM_Screen_ver = windowRect(4) / screen_size(2);
@@ -23,5 +23,8 @@ function [gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParam
         E_min_size_dva = 1;
         size_dva = 2*DISTANCE*tand(E_min_size_dva/2)/pix_size; % divide the freq in cpd by size_dva to obtain the size in cpp 
         FREQS = FREQS_test./size_dva; % here we convert cpd (cycles per dva) in cpp (cycles per pixels) 
+    elseif contains(current_test, 'dichoptic')
+
+        
     end
 end

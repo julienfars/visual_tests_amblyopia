@@ -500,4 +500,4 @@ writetable(temps,filename)
 fprintf('Output saved in: %s\n', filename)
 
 global_param.EYE_TEST = '?';
-save('global_param.mat','global_param');
+save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
