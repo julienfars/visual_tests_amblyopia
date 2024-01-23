@@ -56,4 +56,5 @@ FF2w, current_test, debug_interocular_imbalance, time)
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
     end
     Screen('DrawingFinished', window);
+    end
 end

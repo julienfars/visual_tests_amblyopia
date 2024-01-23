@@ -1,19 +1,17 @@
 %{
-Welcome to the battery of tests used in the Amblyopia study. 
-If you have questions about the tests, contact Juju (julien.fars@ndcn.ox.ac.uk)
-This battery aims to test various functions of the amblyopic visual experience. 
-The parameters of this test (and the subsequent ones) are extracted from the GetGlobalVariables.m script and then are stored in the
-global_param.mat variable. If you use a different setting that the one
-described in the study, please do change the parameters in
-GetGlobalVariables.m
-This battery of tests is using modified scripts from several research teams and individuals. 
-For the original version of these scripts, contact: 
-- Alex S Baldwin - McGill Vision Research (staircase protocol)
-- Jun-Yun Zhang - Beijing Key Laboratory of Behavior and Mental Health (for the Dichoptic test)
-- Alice Grasso McCaslin, School of Optometry, Indiana University (Asteroid test script and related functions)
+Welcome to the Amblyopia Study Test Battery.
 
-It is also important to note that some functions present in the battery of tests were inspired from the
-tutorials of Peter Scarfe - Scarfe Lab (see https://peterscarfe.com/ptbtutorials.html)
+This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
+If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
+
+Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
+
+This battery utilizes modified scripts from different researchers:
+- Alex S Baldwin (Staircase protocol)
+- Jun-Yun Zhang (Dichoptic test)
+- Alice Grasso McCaslin (Asteroid test script)
+
+Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
 %}
 
 %{
@@ -86,7 +84,6 @@ Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast]); %bgcontrast
 
 %% Other Parameters
 [xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect);
-start_trial_key = KbName('a');
 
 %% clear screen of host PC 
 % clears the screen of the host PC so we can start the test
@@ -102,7 +99,7 @@ eyelink_clear_screen(var_eye_link,el)
 %% Basic Grating parameters
 
 [gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size);
-[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, CUTOFF, CONTRAST);
+[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, CUTOFF, CONTRAST, global_param.dichop_contrast_high, global_param.dichop_contrast_low);
 
 nGabors = 2; % number of gratings on display
 [allRects, propertiesMat] = setupGratingsParameters(xCenter, yCenter, gaborDimPix, nGabors, phase, freq, contrast_high);
@@ -269,25 +266,15 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
     % Wait for a button press
     [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temps, counter_trial); 
+    if contains(value, 'ESCAPE')
+        break;
+    end
     [mrt,counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, counter_mrt, NOISE, []);
-            
-            % when the staircase is finished, we calculate the mean of
-            % reversals from the mrt table
-            if sc.isFinished
-                idx = any(mrt{:,1}>maxNumReversals-6,2); %alternative is to get all of the reversals and THEN remove some from the total in mrt_extracted                                   
-                mrt_extracted = mrt(idx,:);
-                mean_reversals = mean(mrt_extracted{:,2});
-                % the mean of reversals is then recorded at the end of the
-                % table
-                %careful not working here, MUST FIX
-                temps(sc.trialCount+1,:) = {sc.trialCount+1, sc.revCount, mean_reversals,contrast_low, contrast_high, 'MEAN', 'reversal', 0, Stim_position, AMB_EYE, EYE_TEST, 0, datetime('now')};
-            end
-                %here the function for the plot staircase/values (needs to be modified for compatibility with all the tests)
-            if sc.isFinished
-                plot_results(sc.isFinished, temps, mean_reversals, []);
-            else % even if not finished the plot is displayed
-                plot_results(sc.isFinished, temps, NOISE, []); 
-            end
+    [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, ...
+    mrt, maxNumReversals, NOISE, Stim_position, EYE_TEST, AMB_EYE, ...
+    current_test, counter_trial, mt, iSC, FREQS_test);
+    plotStaircaseValues(sc, temps, mean_reversals, iSC, NOISE, current_test, [], contrast);
+     
    if contains(var_eye_link, 'true')  
            Eyelink('Message', 'BLANK_SCREEN');
            WaitSecs(0.1); % Add 100 msec of data to catch final events before stopping
@@ -299,7 +286,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 end
 Priority(0);
 
-% eyelink - close the edf file
+%% eyelink - close the edf file
  newName = ['Dichoptic_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
 [status] = eyelink_close_edf_file(var_eye_link,dummymode,el,window,height, edfFile, newName);
 
@@ -310,7 +297,6 @@ sca;
 %% Results table
 % export data table from staircase object into an xls file
 baseFileName = SUBJECT + "_" + date + '_dichoptic';
-
 
 [filename, global_param] = results_table(baseFileName, global_param, EYE_TEST, AMB_EYE, mean_reversals);
 

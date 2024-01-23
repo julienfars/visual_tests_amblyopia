@@ -55,7 +55,7 @@ num_freqs = numel(FREQS_test);
 
 %% Screen stuff
 % Call the function to set up screen parameters
-[window, windowRect, width, height] = setupScreen();
+[window, windowRect, width, height] = setupScreen(100);
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
@@ -63,7 +63,7 @@ num_freqs = numel(FREQS_test);
 
 %% Other parameters
 % Call the function to set up other parameters
-[xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect)
+[xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect);
 
 %% clear screen of host PC 
 % clears the screen of the host PC so we can start the test

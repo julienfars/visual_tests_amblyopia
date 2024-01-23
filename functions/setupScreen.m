@@ -1,5 +1,5 @@
 %% Function to set up screen parameters
-function [window, windowRect, width, height] = setupScreen(stereo)
+function [window, windowRect, width, height] = setupScreen(stereo, debug)
     % Check platform for sync tests
     if ismac || isunix
         Screen('Preference', 'SkipSyncTests', 0);
@@ -31,7 +31,13 @@ function [window, windowRect, width, height] = setupScreen(stereo)
     PsychImaging('PrepareConfiguration');
     PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
     PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
-    [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], [], stereoMode);
+    
+    % Open a small PsychImaging window in the corner for debugging
+    if debug
+        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 400 400], [], [], stereoMode);
+    else
+        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], [], stereoMode);
+    end
 
     % Instead of returning width and height of the graphics window/screen in pixels
     % using this [width, height] = Screen('WindowSize', window); 

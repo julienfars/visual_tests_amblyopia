@@ -70,7 +70,7 @@ current_test = 'contrast_interleaved';
 
 %% Other parameters
 % Call the function to set up other parameters
-[xCenter, yCenter] = setupOtherParameters(window, windowRect);
+[xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect);
 
 %% clear screen of host PC 
 % clears the screen of the host PC so we can start the test

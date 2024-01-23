@@ -1,11 +1,21 @@
-function [sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, CUTOFF, CONTRAST)
-    % Initial stimulus params for the grating:
+function [sinetex, phase, freq, tilt, contrast_high, ...
+    contrast_low] = createGratingTexture(window, gaborDimPix, ...
+    CUTOFF, CONTRAST, high, low)
+    
+
+% Initial stimulus params for the grating:
     virtualSize = gaborDimPix;
     phase = 0;
     freq = 0.4*CUTOFF; % following Liu & Zhang paper, we only use 40% of the cut-off frequency
     tilt = 0;
-    contrast_high = 0.8;
-    contrast_low = abs(exp(-1.6*CONTRAST)-0.2);
+    contrast_high = high;
+
+    if isempty(low)
+        contrast_low = abs(exp(-1.6*CONTRAST)-0.2);
+    else 
+        contrast_low = low;
+    end
+
     %contrast_low = (0.8 - ((CONTRAST)*1.414));
     % fplot(@(x) (0.8 - ((x)*1.414)),[0 1])
     % fplot(@(x) abs(exp(-1.6*x)-0.2),[0 1]) % YES! better way to do it
