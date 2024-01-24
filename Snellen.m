@@ -34,22 +34,14 @@ filepath=fileparts(which('Snellen.m')); %determine what is the filepath of the s
 cd(filepath); % add the filepath to matlab filepaths (useful to save the files at the end of the test)
 KbName('UnifyKeyNames'); %set up the keyboard for answers 
 
-%% Same patient? Retest? 
-% This battery of test will be performed thrice on the same session (FE, AE and BE)
-% And thrice for each participant (training, test and retest)
-
-New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
-retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
-
-global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
-
-% Set retest variable
-global_param.Retest = contains(retest, 'true');
+%% retrieve data from previous test 
+New_patient = []; % set to empty as the battery of tests should not start by this test
+global_param = initializeNewPatient(New_patient);
 
 %% Participant Information 
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
-current_test = 'cutoff';
+current_test = 'snellen';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross] = getParticipantInfo(global_param);
 

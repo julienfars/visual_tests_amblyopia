@@ -1,4 +1,4 @@
-function [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temps, counter_trial, orientation)
+function [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temps, counter_trial, orientation, current_test)
     
     % Wait for a button press
     [keyIsDown, t, keyCode] = KbCheck;
