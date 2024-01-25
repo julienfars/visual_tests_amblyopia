@@ -86,17 +86,14 @@ sc = staircase(StimLevels, initStepSize, stepSize,         ...
                maxNumReversals, startLevel, verbose);
 
 %% creating the results table (will be in /data folder)
-sz = [maxNumTrials+1;12];
-varTypes = ["double","double","double", "double","string","string", "string", "double","string", "string", "double","datetime"];
-varNames = ["Trial","Reversal","Level", "LogMar","value", "key", "Position", "orientation","Eye", "AMB", "RT","time"];
-temps = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+nb_table = 1;
+temps = createTable(maxNumTrials, 1,["string", "datetime", "double", "double", "string", "string", "string", ...
+                    "double", "double", "string", "string", "string", "double"], ["Task", "Date_time",...
+                    "Trial", "Reversal", "Staircase", "AMB_eye", "Eye_tested", "logMar", ...
+                       "Orientation", "Position", "Key", "Success", "RT"]);
 
 %% creating the mean reversals table (for the calculation of the mean/threshold)
-mr = [maxNumReversals;2];
-varTypes2 = ["double", "double"];
-varNames2 = ["Reversal  Number", "Value"];
-mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
-
+mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 
 %% determining moving side of the half crosses
 [HC1, HC2] = determineMovingSide(AMB_EYE, HCl, HCr);

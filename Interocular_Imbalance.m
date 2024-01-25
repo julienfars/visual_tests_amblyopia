@@ -121,31 +121,20 @@ verbose = 1;        % set to 1 for verbose staircase output
 %% Result table
 % the final results table is generated here (optimisation reasons)
 % this table will be saved in the 'data' folder as an excel table for further analyses 
-
 nb_table = numel(FREQS);
-sz = [(maxNumTrials+7)*nb_table;15];
-varTypes = ["double","double","double","double", "double", "string", "string","double","double","double","double","double","datetime", "string", "string"];
-varNames = ["Staircase","Fraction","Frequency", "orientationAE", "orientationFE", "Position","Key","Trial","Reversal","LevelAE","Level", "RT","time", "Eye", "AMB"];
-temps = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-
-counter_trial = 1;
+temps = createTable(maxNumTrials, nb_table, ["string", "datetime", "double", "double", "string", ...
+    "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "double"], ...
+    ["Task", "Date_time", "Trial", "Reversal", "AMB_eye", "Eye_tested", "Contrast_AE", "Contrast_FE", "Staircase",...
+    "Frequency_dva", "Orientation_AE", "Orientation_FE", "Position", "Key", "Success", "RT"]);
 
 %% creating the reversals table
-mr = [maxNumReversals*6+1;3];
-varTypes2 = ["double", "double", "double"];
-varNames2 = ["Reversal  Number", "Value", "Staircase"];
-mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
+mrt = createMRTTable(maxNumReversals, nb_table, 'interleaved');
 
 %% and the mean reversals only
-m = [iSC+1;4];
-varTypes2 = ["double", "double", "double", "double"];
-varNames2 = ["Staircase","Fraction","Frequency","MEAN"];
-mt = table('Size',m,'VariableTypes',varTypes2,'VariableNames',varNames2);
-
-
+mt = createMTTable(nb_table, 'interleaved');
 
 %% launch the experiment staircase
-
+    counter_trial = 1;
     % keep looping until all staircases conclude
     while ~all([staircaseArray(:).isFinished])
   

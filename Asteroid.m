@@ -97,7 +97,6 @@ while(keyisdown)    % wait for keys to be released
    [keyisdown, secs, keycode] = KbCheck(-1);
    WaitSecs(0.001);
 end
-
 Screen(window,'Flip');
 
 
@@ -263,56 +262,17 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
    end
 
 %% make ovals instead of dots
-% here we are converting all the dots into ovals. When using the scnalines
-% with the stereomode, the dots are squeezed. Therefore we must make them
-% longer = y longer than x to put them back to the rightful size
-   % calculate the number of ovals 
-   n_ovals_L = size(dotcolL,2);
-   n_ovals_R = size(dotcolR,2);
-   n_ovals = max([n_ovals_L, n_ovals_R]);
-
-   ovalsizepix = [expt.dotsizepix/2; expt.dotsizepix];% because stereomode = 100
-   % now create a vector of the size of the number of dots/ovals 
-   ovalarrayL = ones(4,n_ovals_L); % will fill the [rect] parameter
-   ovalarrayR = ones(4,n_ovals_R);
-   
-   %dotarray = xy positions; we must provide ovals each position 
-
-    for ov = 1:n_ovals
-        if ov <= length(dotarrayL)
-        x = dotarrayL(1,ov)+cen_L(1);
-        y = dotarrayL(2,ov)+cen_L(2);
-        X1 = x-12;%7
-        X2 = x+12;%7
-        Y1 = y-6;%14
-        Y2 = y+6;%14
-        ovalarrayL(:,ov) = [X1;Y1;X2;Y2];
-        end
-        if ov <= length(dotarrayR)
-        x = dotarrayR(1,ov)+cen_R(1);
-        y = dotarrayR(2,ov)+cen_R(2);
-        X1 = x-12;%7
-        X2 = x+12;%7
-        Y1 = y-6;%14
-        Y2 = y+6;%14
-        ovalarrayR(:,ov) = [X1;Y1;X2;Y2];
-        end
-    end
-    maxDiameter = 24;%28
-
-
+[ovalarrayL, ovalarrayR] = convertDotsToOvals(dotarrayL, dotarrayR, cen_L, cen_R, expt, dotcolL, dotcolR);
     
 %% DISPLAY THE EXPERIMENT
-      
+maxDiameter = 24;
+  
 % Left Eye
 
       Screen('SelectStereoDrawBuffer',window,0);
       Screen('FillOval', window, dotcolL, ovalarrayL, maxDiameter);
-      %Screen('DrawDots',window,dotarrayL,expt.dotsizepix,dotcolL,cen_L,expt.dottype);
-      % use Screen(‘FillOval’, windowPtr [,color] [,rect] [,perfectUpToMaxDiameter]);
-      dotcolL(4,:) = 128; %was 0.5 but apparently it does not work that way 
+      dotcolL(4,:) = 128; 
       Screen('FillOval', window, dotcolL, ovalarrayL, maxDiameter);
-      %Screen('DrawDots',window,dotarrayL,expt.dotsizepix,dotcolL,cen_L,expt.dottype);     
 
       Screen('FillRect',  window, [0, 0, 255], blueRectLeftOn  );
       Screen('FillRect',  window, [0, 0, 0],   blueRectLeftOff );
@@ -325,13 +285,9 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
       
 % Right eye
       
-      %Screen('FillRect',window,expt.bgcol);  % Erase this buffer
       Screen('SelectStereoDrawBuffer',window,1);
-      %Screen('DrawDots',window,dotarrayR,expt.dotsizepix,dotcolR,cen_R,expt.dottype);
       Screen('FillOval', window, dotcolR, ovalarrayR, maxDiameter);
-      % Now, draw dots transparent so you get colour merging:
-      dotcolR(4,:) = 128; %was 0.5 but apparently it does not work that way 
-      %Screen('DrawDots',window,dotarrayR,expt.dotsizepix,dotcolR ,cen_R,expt.dottype);   
+      dotcolR(4,:) = 128; 
       Screen('FillOval', window, dotcolR, ovalarrayR, maxDiameter);
 
       Screen('FillRect',  window, [0, 0, 255], blueRectRightOn );

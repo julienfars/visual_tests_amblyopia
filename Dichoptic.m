@@ -132,20 +132,16 @@ sc = staircase(StimLevels, initStepSize, stepSize,         ...
 %% Result table
 % the final results table is generated here (optimisation reasons)
 % this table will be saved in the 'data' folder as an excel table for further analyses 
-
-sz = [maxNumTrials+1;13];
-varTypes = ["double","double","double","double","double","string", "string", "double", "string",  "string", "string", "double","datetime"];
-varNames = ["Trial","Reversal","Level", "Contrast low", "Contrast high","value", "key", "orientation", "Position", "AMB", "Eye", "RT","time"];
-temps = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+nb_table = 1;
+temps = createTable(maxNumTrials, nb_table, ["string", "datetime", "double", "string", "string",...
+    "double", "double", "double" "double", "double", "double", "string", "string", "string", "double"], ...
+    ["Task", "Date_time", "Trial", "Staircase", "AMB_eye", "Eye_tested", "Contrast_low", "Contrast_high",...
+    "Frequency_dva", "Orientation", "Noise", "Position", "Key", "Success", "RT"] ); 
 
 %% Mean reversals table 
 % the mean reversals table is generated here (optimisation reasons)
 % this table will not be saved after the test but we use it to generate the threshold
-
-mr = [maxNumReversals;2];
-varTypes2 = ["double", "double"];
-varNames2 = ["Reversal  Number", "Value"];
-mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
+mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 
  %% Start the experiment 
 

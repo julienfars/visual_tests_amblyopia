@@ -4,6 +4,7 @@ function global_param = initializeNewPatient(New_patient)
 
     if contains(New_patient, 'true')
         global_param = GetGlobalVariables(); % Set up a 'brand new' "global_param" structure file
+        return
     else
         if isfile("data/Global_parameters/global_param.mat")
             load("data/Global_parameters/global_param.mat");
@@ -11,4 +12,5 @@ function global_param = initializeNewPatient(New_patient)
             global_param = GetGlobalVariables();
         end
     end
+    
 end

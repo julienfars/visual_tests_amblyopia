@@ -45,9 +45,9 @@ KbName('UnifyKeyNames'); %set up the keyboard for answers
 % And thrice for each participant (training, test and retest)
 
 New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
-retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
 
 global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
+retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
 
 % Set retest variable
 global_param.Retest = contains(retest, 'true');
@@ -57,19 +57,19 @@ global_param.Retest = contains(retest, 'true');
 % from the screen, etc...
 current_test = 'cutoff';
 % Call the function to get participant information
-[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross] = getParticipantInfo(global_param);
+[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
 
 global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
 global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
 global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the global_param structure 
 
 %% Eyelink Parameters
-
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
 
 %% Screen Parameters
 % Call the function to set up screen parameters
-[window, windowRect, width, height] = setupScreen(100);
+debug = 1;
+[window, windowRect, width, height] = setupScreen(100, debug);
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
@@ -82,29 +82,25 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 
 %% clear screen of host PC 
 % clears the screen of the host PC so we can start the test
-
 eyelink_clear_screen(var_eye_link,el)
 
 %% Fusion crosses/frames
 % will start if the participant has starbismus AND is testing BE 
-
 [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereoMode); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
 [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMode); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
 
 %% Basic Gabor parameters
-
 % Call the function to set up basic Gabor parameters
 [gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size, current_test);
 
 %% Other Gabor Parameters
-
 [gabortex, aspectRatio, phase, contrast] = createGaborTexture(window, gaborDimPix, current_test);
 
 %% Staircase 
 % then we set up the staircase procedure
 
 % these parameters control the staircase (change it to remove the extra stepSizes)
-StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 50 (log) 
+StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 100 (log) 
 initStepSize    = 0.6;      % staircase step size before first reversal
 stepSize        = 0.4;      % staircase step size after first reversal - has more reversals (see staircase code)
 nRightToAscend  = 3;        % number of "correct" responses before ascending
@@ -122,20 +118,13 @@ sc = staircase(StimLevels, initStepSize, stepSize,         ...
 %% Result table
 % the final results table is generated here (optimisation reasons)
 % this table will be saved in the 'data' folder as an excel table for further analyses 
-
-sz = [maxNumTrials+1;11]; % we use maxNumTrials + 1 to encompass the ligne dedicated to the threshold. 
-varTypes = ["double","double","double","string", "string", "double", "string", "string", "string", "double","datetime"];
-varNames = ["Trial","Reversal","Level","value", "key", "orientation", "Position", "Eye", "AMB", "RT","time"];
-temps = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+nb_table = 1;
+temps = createTable(maxNumTrials, nb_table, [], []); % use default variable types and names
 
 %% Mean reversals table 
 % the mean reversals table is generated here (optimisation reasons)
 % this table will not be saved after the test but we use it to generate the threshold
-
-mr = [maxNumReversals+1;2];
-varTypes2 = ["double", "double"];
-varNames2 = ["Reversal  Number", "Value"];
-mrt = table('Size',mr,'VariableTypes',varTypes2,'VariableNames',varNames2);
+mrt = createMRTTable(maxNumReversals, nb_table, 'single');
 
  %% Start the experiment 
 
@@ -176,11 +165,10 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 if contains(value, 'ESCAPE')
         break;
 end
-    %% Record/display the results
-
-    mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2));
-    temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, [], []);
-    plotStaircaseValues(sc, temps, mean_reversals, []);
+   %% Record/display the results
+   mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2));
+   temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, [], []);
+   plotStaircaseValues(sc, temps, mean_reversals, []);
    
    %% 'Wash' the display
    % after the stim was displayed, we wash the screen by displaying a
