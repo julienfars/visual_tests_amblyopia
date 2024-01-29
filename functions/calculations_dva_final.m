@@ -13,18 +13,18 @@ function E_min_size_dva = calculations_dva_final(windowRect, DISTANCE, screen_si
 end
 
 %{
-% Example 1
+% Example 1 (Personal Laptop)
 windowRect1 = [0 0 1920 1080];
 DISTANCE1 = 127.5;
 screen_size_cm1 = 51.86;
 object_size_pixels1 = 830;
 E_min_size_dva1 = calculations_dva_final(windowRect1, DISTANCE1, screen_size_cm1, object_size_pixels1);
 
-% Example 2
+% Example 2 (Experimental Setup)
 windowRect2 = [0 0 1920 1080];
 DISTANCE2 = 150;
 screen_size_cm2 = global_param.screen_size(2) / 10;
-object_size_pixels2 = 1;
+object_size_pixels2 = 552;
 E_min_size_dva2 = calculations_dva_final(windowRect2, DISTANCE2, screen_size_cm2, object_size_pixels2);
 
 % Example 3 (VR device)

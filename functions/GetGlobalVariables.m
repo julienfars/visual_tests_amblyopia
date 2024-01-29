@@ -16,7 +16,7 @@ global_param.pix_shift = [0;0];       % this is recorded in contrast interleaved
 global_param.reduced = false;
 
 %% all the participant parameters 
-global_param.ID = '0'; % default at 0 --> indicates test 
+global_param.ID = '1'; % default at 0 --> indicates test 
 global_param.AMB_EYE = '?';
 global_param.Retest = false;
 global_param.EYE_TEST = '?';

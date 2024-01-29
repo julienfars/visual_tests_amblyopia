@@ -1,8 +1,9 @@
-function [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temps, counter_trial, orientation, current_test)
+function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc, temps, counter_trial, orientation, current_test, fixCross)
     
+    timeSecs = KbWait;
     % Wait for a button press
     [keyIsDown, t, keyCode] = KbCheck;
-    
+
     rt = 0;
     value = 'NO_RESPONSE';
     key = '';
@@ -20,30 +21,34 @@ function [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, 
         
         % Handle different test conditions
         if ~contains(current_test, {'interocular_imbalance', 'snellen', 'snellen_crowded', 'dichoptic'})
-            [value, sc] = handleNonTestConditions(keyCode, escapeKey, rightKey, leftKey, angular, sc);
+            [value, sc] = handleNonTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc);
+            % change it here, change the contains to choose from each
+            % current test + add the temps in the choices
         elseif contains(current_test, 'interocular_imbalance')
-            [value, sc] = handleInterocularImbalanceConditions(keyCode, escapeKey, rightKey, leftKey, angle_results_FE, normal_testing, sc);
+            [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angle_results_FE, normal_testing, sc);
         elseif contains(current_test, 'dichoptic')
-            [value, sc] = handleDichopticConditions(keyCode, escapeKey, upKey, downKey, acc_resp, att_test, sc);
+            [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc);
         else
-            [value, sc] = handleOtherTestConditions(keyCode, escapeKey, rightKey, leftKey, upKey, downKey, orientation, sc);
+            [value, sc] = handleOtherTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, orientation, sc);
         end
         
         fprintf('Current threshold from reversals: %0.2f +/- %0.2f\n\n', sc.curReversalThresh, sc.curReversalError);
         
-        % get the x-y shift from the center into the variable Stim_position 
-        Stim_position = HC1(1:2,3) - HC2(1:2,3);
-        Stim_position = Stim_position'; % transpose 
-        Stim_position = num2str(Stim_position);
-
-        temps(counter_trial,:) = {iSC, FREQS_test(iSC), freq, orientation, Stim_position, key, sc.trialCount, sc.revCount, contrast, value, rt, datetime('now'), EYE_TEST, AMB_EYE};
-        counter_trial = counter_trial + 1;
+        if fixCross
+            % get the x-y shift from the center into the variable Stim_position 
+            Stim_position = HC1(1:2,3) - HC2(1:2,3);
+            Stim_position = Stim_position'; % transpose 
+            Stim_position = num2str(Stim_position);
+        else 
+            Stim_position = [''];
+        end
     end
+    counter_trial = counter_trial+1;
 end
 
 % Define helper functions for each test condition
-function [value, sc] = handleNonTestConditions(keyCode, escapeKey, rightKey, leftKey, angular, sc)
-    value = 'NO_RESPONSE';
+function [value, sc] = handleNonTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc)
+    value = 'WRONG_RESPONSE';
     
     if keyCode == escapeKey
         value = 'ESCAPE';
@@ -56,8 +61,8 @@ function [value, sc] = handleNonTestConditions(keyCode, escapeKey, rightKey, lef
     end
 end
 
-function [value, sc] = handleInterocularImbalanceConditions(keyCode, escapeKey, rightKey, leftKey, angle_results_FE, normal_testing, sc)
-    value = 'NO_RESPONSE';
+function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angle_results_FE, normal_testing, sc)
+    value = 'WRONG_RESPONSE';
     
     if keyCode == escapeKey
         value = 'ESCAPE';
@@ -70,8 +75,8 @@ function [value, sc] = handleInterocularImbalanceConditions(keyCode, escapeKey, 
     end
 end
 
-function [value, sc] = handleDichopticConditions(keyCode, escapeKey, upKey, downKey, acc_resp, att_test, sc)
-    value = 'NO_RESPONSE';
+function [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc)
+    value = 'WRONG_RESPONSE';
     
     if keyCode == escapeKey
         value = 'ESCAPE';
@@ -87,8 +92,8 @@ function [value, sc] = handleDichopticConditions(keyCode, escapeKey, upKey, down
     end
 end
 
-function [value, sc] = handleOtherTestConditions(keyCode, escapeKey, rightKey, leftKey, upKey, downKey, orientation, sc)
-    value = 'NO_RESPONSE';
+function [value, sc] = handleOtherTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, orientation, sc)
+    value = 'WRONG_RESPONSE';
     
     if keyCode == escapeKey
         value = 'ESCAPE';

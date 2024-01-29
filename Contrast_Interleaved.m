@@ -185,6 +185,7 @@ Screen('Flip', window);
 
     onsetTime = GetSecs;
     [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
+    % add temps here!!!
     if contains(value, 'ESCAPE')
         break;
     end

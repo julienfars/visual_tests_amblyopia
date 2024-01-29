@@ -69,7 +69,8 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 %% Screen Parameters
 % Call the function to set up screen parameters
 debug = 1;
-[window, windowRect, width, height] = setupScreen(100, debug);
+stereoMode = 100;
+[window, windowRect, width, height, black, white] = setupScreen(stereoMode, debug);
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
@@ -91,13 +92,14 @@ eyelink_clear_screen(var_eye_link,el)
 
 %% Basic Gabor parameters
 % Call the function to set up basic Gabor parameters
-[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size, current_test);
+[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size, [], current_test);
 
 %% Other Gabor Parameters
 [gabortex, aspectRatio, phase, contrast] = createGaborTexture(window, gaborDimPix, current_test);
 
 %% Staircase 
 % then we set up the staircase procedure
+ifi = Screen('GetFlipInterval', window);
 
 % these parameters control the staircase (change it to remove the extra stepSizes)
 StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 100 (log) 
@@ -106,7 +108,7 @@ stepSize        = 0.4;      % staircase step size after first reversal - has mor
 nRightToAscend  = 3;        % number of "correct" responses before ascending
 nWrongToDescend = 1;        % number of "incorrect" responses before descending
 maxNumTrials    = 35;       % maximum number of trials for staircase (35 without the training - 40 in total)
-maxNumReversals = 10;       % maximum number of reversals for staircase
+maxNumReversals = 8;       % maximum number of reversals for staircase
 startLevel      = log10(5); % starting level of staircase (5 should be easy to begin with)
 verbose         = 1;        % set to 1 for verbose staircase output
 
@@ -119,21 +121,21 @@ sc = staircase(StimLevels, initStepSize, stepSize,         ...
 % the final results table is generated here (optimisation reasons)
 % this table will be saved in the 'data' folder as an excel table for further analyses 
 nb_table = 1;
-temps = createTable(maxNumTrials, nb_table, [], []); % use default variable types and names
+temps = createTable(maxNumTrials, nb_table); % use default variable types and names
 
 %% Mean reversals table 
 % the mean reversals table is generated here (optimisation reasons)
 % this table will not be saved after the test but we use it to generate the threshold
-mrt = createMRTTable(maxNumReversals, nb_table, 'single');
+mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 
  %% Start the experiment 
-
-    doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')
+[HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
+doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')
+counter_trial = [];
 while ~sc.isFinished           % keep looping until staircase concludes
-    
-    % run the fixing cross before the trial
+  
    [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
+doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPress, black, white, ifi, current_test);
 
    % Randomisation
 [angular, orientation] = randomizeOrientation();
@@ -146,7 +148,7 @@ propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix, aspectRa
 eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
  %% display the stim
-    drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
+    drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w, black, white);
 
     % Flip to the screen
     beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
@@ -160,14 +162,15 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 [err] = eyelink_start_recording(var_eye_link);
 
 %% Wait for a button press
-
-[rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
+[rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc, temps, counter_trial, orientation, current_test, fixCross);
+temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, EYE_TEST, AMB_EYE, contrast, propertiesMat(2), orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
         break;
 end
+
    %% Record/display the results
-   mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2));
-   temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, [], []);
+   mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2), []);
+   temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
    plotStaircaseValues(sc, temps, mean_reversals, []);
    
    %% 'Wash' the display

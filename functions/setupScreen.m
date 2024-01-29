@@ -1,5 +1,5 @@
 %% Function to set up screen parameters
-function [window, windowRect, width, height] = setupScreen(stereo, debug)
+function [window, windowRect, width, height, black, white] = setupScreen(stereo, debug)
     % Check platform for sync tests
     if ismac || isunix
         Screen('Preference', 'SkipSyncTests', 0);
