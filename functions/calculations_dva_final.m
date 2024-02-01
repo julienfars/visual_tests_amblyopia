@@ -17,7 +17,7 @@ end
 windowRect1 = [0 0 1920 1080];
 DISTANCE1 = 127.5;
 screen_size_cm1 = 51.86;
-object_size_pixels1 = 830;
+object_size_pixels1 = 1080;
 E_min_size_dva1 = calculations_dva_final(windowRect1, DISTANCE1, screen_size_cm1, object_size_pixels1);
 
 % Example 2

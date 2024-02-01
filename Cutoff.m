@@ -16,7 +16,7 @@ Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
 
 %{
                             CUTOFF frequency 
-This test will be done in first. The resulting gabor thrshold frequency is used in the
+This test will be done in first. The resulting gabor threshold frequency is used in the
 following tests: 
 - Contrast Interleaved
 - Binocular Orientation
@@ -28,7 +28,6 @@ binocularly. At the end we obtain 3 CUTOFF frequencies:
 - Amblyopic Eye (AE) 
 - Both Eyes (BE)
 %}
-
 
 %% Setup
 sca; % to clean the workspace
