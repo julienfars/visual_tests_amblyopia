@@ -25,18 +25,25 @@ function [window, windowRect, width, height] = setupScreen(stereo, debug)
     % This will be half the luminance value for white
     grey = white / 2;
 
-    % can add an if loop here --> must check the stereomode for some
-    % specific scripts
-    stereoMode = stereo; 
-    PsychImaging('PrepareConfiguration');
-    PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
-    PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
-    
-    % Open a small PsychImaging window in the corner for debugging
-    if debug
-        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 400 400], [], [], stereoMode);
-    else
-        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], [], stereoMode);
+    if ~isempty(stereo) && ~debug
+        PsychImaging('PrepareConfiguration');
+        PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
+        PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], [], stereo);
+    elseif ~isempty(stereo) && debug
+        PsychImaging('PrepareConfiguration');
+        PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
+        PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+        % Open a small PsychImaging window in the corner for debugging
+        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 400 400], [], [], stereo);
+    elseif isempty(stereo) && ~debug
+        PsychImaging('PrepareConfiguration');
+        PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], []);
+    elseif isempty(stereo) && debug
+        PsychImaging('PrepareConfiguration');
+        PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+        [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 400 400], [], []);
     end
 
     % Instead of returning width and height of the graphics window/screen in pixels

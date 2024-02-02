@@ -42,14 +42,10 @@ KbName('UnifyKeyNames'); %set up the keyboard for answers
 %% Same patient? Retest? 
 % This battery of test will be performed thrice on the same session (FE, AE and BE)
 % And thrice for each participant (training, test and retest)
-
 New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
-
 global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
 retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
-
-% Set retest variable
-global_param.Retest = contains(retest, 'true');
+global_param.Retest = contains(retest, 'true');% Set retest variable
 
 %% Participant Information 
 % calls global.param to retrive information from the screen size, distance
@@ -68,12 +64,12 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 %% Screen Parameters
 % Call the function to set up screen parameters
 debug = 1;
-[window, windowRect, width, height] = setupScreen(100, debug);
+stereo = []; % use 100 for the display++
+[window, windowRect, width, height] = setupScreen(stereo, debug);
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
-
-[el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
 
 %% Other parameters
 % Call the function to set up other parameters
@@ -85,8 +81,8 @@ eyelink_clear_screen(var_eye_link,el)
 
 %% Fusion crosses/frames
 % will start if the participant has starbismus AND is testing BE 
-[HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereoMode); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
-[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMode); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
+[HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereo); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
+[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereo); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
 
 %% Basic Gabor parameters
 % Call the function to set up basic Gabor parameters
@@ -97,7 +93,6 @@ eyelink_clear_screen(var_eye_link,el)
 
 %% Staircase 
 % then we set up the staircase procedure
-
 % these parameters control the staircase (change it to remove the extra stepSizes)
 StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 100 (log) 
 initStepSize    = 0.6;      % staircase step size before first reversal
@@ -146,24 +141,21 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
  %% display the stim
     drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
-
     % Flip to the screen
-    beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
-
+    beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is tested)
     Screen('Flip', window);
     onsetTime = GetSecs;
 
 %% Eyelink recording
 % we start recording the trial here
-
 [err] = eyelink_start_recording(var_eye_link);
 
 %% Wait for a button press
-
 [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
 if contains(value, 'ESCAPE')
         break;
 end
+
    %% Record/display the results
    mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2));
    temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, [], []);
@@ -181,7 +173,7 @@ end
 end
 
 %% Eyelink close edf and save
- newName = ['Cutoff_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
+newName = ['Cutoff_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
 [status] = eyelink_close_edf_file(var_eye_link,dummymode,el,window,height, edfFile, newName);
 
 %% Clear screen
@@ -189,16 +181,12 @@ sca;
 
 %% Results table
 % export data table from staircase object into an xls file
-baseFileName = SUBJECT + "_" + date + '_cutoff_freq';
-
+baseFileName = SUBJECT + "_" + char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')) + '_cutoff_freq';
 [filename, global_param] = results_table(baseFileName, global_param, EYE_TEST, AMB_EYE, mean_reversals);
-
 writetable(temps,filename)
-
 fprintf('Output saved in: %s\n', filename)
 
 %% ending the script
-
 global_param.EYE_TEST = '?'; % ready for the next launch
 save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
 

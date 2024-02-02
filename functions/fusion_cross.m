@@ -16,15 +16,15 @@ function [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fix
     vpixel = 1 / PixelPerDeg * 60;
 
     if fixCross
-        fixGapV = round(10 / vpixel / 2);
-        fixGapH = round(10 / vpixel / 2);
-
         if stereo == 100
             fixGapV = round(10 / vpixel / 2);
             fixGapH = round(10 / vpixel);
         elseif stereo == 101
             fixGapV = round(10 / vpixel);
             fixGapH = round(10 / vpixel / 2);
+        else 
+            fixGapV = round(10 / vpixel);
+            fixGapH = round(10 / vpixel);
         end
     else
         fixGapV = round(10 / vpixel);
