@@ -2,7 +2,8 @@ function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_trai
     % Calculate the last six reversals and record in the mrt table
     
     recordReversal = sc.trialCount > num_training + 1;
-    
+    if sc.revCount
+
     switch current_test
         case 'cutoff'
             recordReversal = recordReversal && (temps{sc.trialCount, 2} ~= temps{sc.trialCount - 1, 2});
@@ -15,7 +16,7 @@ function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_trai
 
         case 'interocular_imbalance'
             recordReversal = recordReversal && (sc.trialCount > 1) && (temps{sc.trialCount,{'Reversal'}} ~= temps{sc.trialCount-1,{'Reversal'}});
-            mrt(sc.revCount + 1, :) = {sc.revCount, ifelse(contains(normal_testing, 'yes'), var1, var2), iSC}; % Recorded in a table titled mrt
+            mrt(sc.revCount, :) = {sc.revCount, ifelse(contains(normal_testing, 'yes'), var1, var2), iSC}; % Recorded in a table titled mrt
 
         case 'dichoptic'
             recordReversal = recordReversal && (sc.trialCount > 1) && (temps{sc.trialCount, 2} ~= temps{sc.trialCount-1, 2});
@@ -24,6 +25,7 @@ function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_trai
         case 'snellen'
             recordReversal = recordReversal && (sc.trialCount > 1) && (sc.revCount > 0) && (temps{sc.trialCount, 2} ~= temps{sc.trialCount-1, 2});
             mrt(sc.revCount, :) = {sc.revCount, var1}; % recorded in a table titled mrt
+    end
     end
 
 end

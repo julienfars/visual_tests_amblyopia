@@ -1,167 +1,155 @@
-function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross, window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-    doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPress, black, white, ifi, current_test)
+function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
+doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPress, black, white, ifi, current_test)
 
 % FIX_CROSS Summary 
 % This function displays the fix cross. The same kind of step is done
 % with the visual training (see Liu et al. 2019). At the moment, the fix cross is only shown
 % once. But with a slight modification, we can display it before each
 % trial.
-
-% Define black and white
-if ~contains(current_test, 'snellen') || ~contains(current_test, 'snellen_crowded')
-    while fixCross
-        vbl = Screen('Flip', window);
-        waitframes = 1;
-        exitFixCross = false;
-
-        while ~exitFixCross % If I want to display the cross at every trial -> I just need to set the variable = false at the end of the staircase loop
-            % Check the keyboard to see if a button has been pressed
-            [keyIsDown, ~, keyCode] = KbCheck;
-
-            % Depending on the button press, either move the position of the square
-            % or exit the demo
-            if keyCode(escapeKey) % if the escape key is used, then the half cross is set, this will be confirmed by the experimenter (the participant notifies when the cross/frame is at the right spot=fusion)
-                exitFixCross = true; % I doubled the while loop just to be sure it goes to the next step - must change later
-                fixCross = false;
-                doubleScreen = true;
-            elseif keyCode(leftKey) || keyCode(rightKey) || keyCode(upKey) || keyCode(downKey) % each short press of the key moves the cross+frame of one pixel
-                HC1 = moveCross(HC1, keyCode, pixelsPerPress);
-                FF1w = moveCross(FF1w, keyCode, pixelsPerPress);
-                FF1b = moveCross(FF1b, keyCode, pixelsPerPress);
-            elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
-                [HC1, FF1w, FF1b] = resetCross(AMB_EYE, HCl, HCr, FF1w, FF1b);
+ if ~fixCross
+    [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = deal([],[],[],[],[],[],[],[]);
+ else
+    % Define black and white
+    if ~contains(current_test, 'snellen') || ~contains(current_test, 'snellen_crowded')
+        while fixCross
+            vbl = Screen('Flip', window);
+            waitframes = 1;
+            exitFixCross = false;
+    
+            while ~exitFixCross % If I want to display the cross at every trial -> I just need to set the variable = false at the end of the staircase loop
+                % Check the keyboard to see if a button has been pressed
+                [keyIsDown, ~, keyCode] = KbCheck;
+    
+                % Depending on the button press, either move the position of the square
+                % or exit the demo
+                if keyCode(escapeKey) % if the escape key is used, then the half cross is set, this will be confirmed by the experimenter (the participant notifies when the cross/frame is at the right spot=fusion)
+                    exitFixCross = true; % I doubled the while loop just to be sure it goes to the next step - must change later
+                    fixCross = false;
+                    doubleScreen = true;
+                elseif keyCode(leftKey) || keyCode(rightKey) || keyCode(upKey) || keyCode(downKey) % each short press of the key moves the cross+frame of one pixel
+                    HC1 = moveCross(HC1, keyCode, pixelsPerPress);
+                    FF1w = moveCross(FF1w, keyCode, pixelsPerPress);
+                    FF1b = moveCross(FF1b, keyCode, pixelsPerPress);
+                elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
+                    [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
+                end
+    
+                % Draw the half crosses to the screen
+                drawHalfCross(window, black, white, HC1, FF1b, FF1w);
+    
+                % Flip to the screen
+                vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+    
+                % here we calculate the difference between the position of the half
+                % cross and the center of the screen, this value will be used when
+                % displaying the Stimuli
+                if contains(AMB_EYE, 'Left') 
+                    diff(:, 1) = HC1(:, 1) - HCl(:, 1);
+                else
+                    diff(:, 1) = HC1(:, 1) - HCr(:, 1);
+                end
             end
-
-            % Draw the half crosses to the screen
-            drawHalfCross(window, black, white, HC1, FF1b, FF1w);
-
-            % Flip to the screen
-            vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-
-            % here we calculate the difference between the position of the half
-            % cross and the center of the screen, this value will be used when
-            % displaying the Stimuli
-            if contains(AMB_EYE, 'Left') 
-                diff(:, 1) = HC1(:, 1) - HCl(:, 1);
-            else
-                diff(:, 1) = HC1(:, 1) - HCr(:, 1);
-            end
+    
+            % this part is "washing up" the screen, it removes the crosses from the
+            % display but leaves the frame
+            washUpScreen(window, HC1, FF1b, FF1w);
         end
-
-        % this part is "washing up" the screen, it removes the crosses from the
-        % display but leaves the frame
-        washUpScreen(window, HC1, FF1b, FF1w);
-    end
-else
-    while fixCross
-        vbl = Screen('Flip', window);
-        waitframes = 1;
-        exitFixCross = false;
-
-        while ~exitFixCross
-            % Check the keyboard to see if a button has been pressed
-            [keyIsDown, ~, keyCode] = KbCheck;
-
-            % Depending on the button press, either move the position of the square
-            % or exit the demo
-            if keyCode(escapeKey) % if the escape key is used, then the half cross is set, this will be confirmed by the experimenter (the participant notifies when the cross/frame is at the right spot=fusion)
-                exitFixCross = true; % I doubled the while loop just to be sure it goes to the next step - must change later
-                fixCross = false;
-                doubleScreen = true;
-            elseif keyCode(leftKey) || keyCode(rightKey) || keyCode(upKey) || keyCode(downKey) % each short press of the key moves the cross+frame of one pixel
-                HC1 = moveCross(HC1, keyCode, pixelsPerPress);
-            elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
-                [HC1, HC2] = resetCross(AMB_EYE, HCl, HCr);
+    else
+        while fixCross
+            vbl = Screen('Flip', window);
+            waitframes = 1;
+            exitFixCross = false;
+    
+            while ~exitFixCross
+                % Check the keyboard to see if a button has been pressed
+                [keyIsDown, ~, keyCode] = KbCheck;
+    
+                % Depending on the button press, either move the position of the square
+                % or exit the demo
+                if keyCode(escapeKey) % if the escape key is used, then the half cross is set, this will be confirmed by the experimenter (the participant notifies when the cross/frame is at the right spot=fusion)
+                    exitFixCross = true; % I doubled the while loop just to be sure it goes to the next step - must change later
+                    fixCross = false;
+                    doubleScreen = true;
+                elseif keyCode(leftKey) || keyCode(rightKey) || keyCode(upKey) || keyCode(downKey) % each short press of the key moves the cross+frame of one pixel
+                    HC1 = moveCross(HC1, keyCode, pixelsPerPress);
+                elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
+                    [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
+                end
+    
+                % Draw the half crosses to the screen
+                drawHalfCross(window, black, [], HC1, []);
+                drawHalfCross(window, black, [], HC2, []);
+    
+                % Flip to the screen
+                vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+    
+                if contains(AMB_EYE, 'Left')
+                    diff(:, 1) = HC1(:, 1) - HCl(:, 1);
+                else
+                    diff(:, 1) = HC1(:, 1) - HCr(:, 1);
+                end
             end
-
-            % Draw the half crosses to the screen
-            drawHalfCross(window, black, [], HC1, []);
-            drawHalfCross(window, black, [], HC2, []);
-
-            % Flip to the screen
-            vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-
-            if contains(AMB_EYE, 'Left')
-                diff(:, 1) = HC1(:, 1) - HCl(:, 1);
-            else
-                diff(:, 1) = HC1(:, 1) - HCr(:, 1);
-            end
+    
+            % this part is "washing up" the screen, it removes the crosses from the
+            % display but leaves the frame
+            washUpScreen(window, HC1);
+            washUpScreen(window, HC2);
         end
-
-        % this part is "washing up" the screen, it removes the crosses from the
-        % display but leaves the frame
-        washUpScreen(window, HC1);
-        washUpScreen(window, HC2);
     end
+    
+  end
 end
-
-end
-
-function cross = moveCross(cross, keyCode, pixelsPerPress)
-% Moves the cross based on the key press
-
-if keyCode(37) % Left arrow key
-    cross(1, :) = cross(1, :) - pixelsPerPress;
-    cross(3, :) = cross(3, :) - pixelsPerPress;
-elseif keyCode(39) % Right arrow key
-    cross(1, :) = cross(1, :) + pixelsPerPress;
-    cross(3, :) = cross(3, :) + pixelsPerPress;
-elseif keyCode(38) % Up arrow key
-    cross(2, :) = cross(2, :) - pixelsPerPress;
-    cross(4, :) = cross(4, :) - pixelsPerPress;
-elseif keyCode(40) % Down arrow key
-    cross(2, :) = cross(2, :) + pixelsPerPress;
-    cross(4, :) = cross(4, :) + pixelsPerPress;
-end
-
-end
-
-function [HC1, FF1w, FF1b] = resetCross(AMB_EYE, HCl, HCr, FF1w, FF1b)
-% Resets the cross to the center of the display
-
-if contains(AMB_EYE, 'Left') 
-    HC1 = HCl;
-    FF1w = FFLw;
-    FF1b = FFLb;
-else
-    HC1 = HCr;
-    FF1w = FFRw;
-    FF1b = FFRb;
-end
-
-end
-
-function drawHalfCross(window, black, white, HC, FF)
-% Draws the half cross to the screen
-
-% Half cross
-Screen('SelectStereoDrawBuffer', window, 0);
-Screen('FillRect', window, black, HC);
-if ~isempty(FF)
-    Screen('FillRect', window, white, FF);
-end
-
-Screen('Flip', window);
-
-end
-
-function washUpScreen(window, HC1, FF1b, FF1w)
-% Washes up the screen, removing the crosses but leaving the frame
-
-rectColor = [1 1 1];
-
-Screen('SelectStereoDrawBuffer', window, 0);
-Screen('FillRect', window, rectColor*0.5, HC1);
-if ~isempty(FF1b)
-    Screen('FillRect', window, rectColor*0.5, FF1b);
-end
-if ~isempty(FF1w)
-    Screen('FillRect', window, rectColor*0.5, FF1w);
-end
-
-Screen('Flip', window);
-WaitSecs(1);
-
+    
+    function cross = moveCross(cross, keyCode, pixelsPerPress)
+    % Moves the cross based on the key press
+    
+    if keyCode(37) % Left arrow key
+        cross(1, :) = cross(1, :) - pixelsPerPress;
+        cross(3, :) = cross(3, :) - pixelsPerPress;
+    elseif keyCode(39) % Right arrow key
+        cross(1, :) = cross(1, :) + pixelsPerPress;
+        cross(3, :) = cross(3, :) + pixelsPerPress;
+    elseif keyCode(38) % Up arrow key
+        cross(2, :) = cross(2, :) - pixelsPerPress;
+        cross(4, :) = cross(4, :) - pixelsPerPress;
+    elseif keyCode(40) % Down arrow key
+        cross(2, :) = cross(2, :) + pixelsPerPress;
+        cross(4, :) = cross(4, :) + pixelsPerPress;
+    end
+    
+    end
+    
+    function drawHalfCross(window, black, white, HC, FF)
+    % Draws the half cross to the screen
+    
+    % Half cross
+    Screen('SelectStereoDrawBuffer', window, 0);
+    Screen('FillRect', window, black, HC);
+    if ~isempty(FF)
+        Screen('FillRect', window, white, FF);
+    end
+    
+    Screen('Flip', window);
+    
+    end
+    
+    function washUpScreen(window, HC1, FF1b, FF1w)
+    % Washes up the screen, removing the crosses but leaving the frame
+    
+    rectColor = [1 1 1];
+    
+    Screen('SelectStereoDrawBuffer', window, 0);
+    Screen('FillRect', window, rectColor*0.5, HC1);
+    if ~isempty(FF1b)
+        Screen('FillRect', window, rectColor*0.5, FF1b);
+    end
+    if ~isempty(FF1w)
+        Screen('FillRect', window, rectColor*0.5, FF1w);
+    end
+    
+    Screen('Flip', window);
+    WaitSecs(1);
+    
 end
 
 

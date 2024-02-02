@@ -2,7 +2,7 @@
 function propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix, aspectRatio, phase, contrast)
     % Set properties for training trials
     if sc.trialCount < num_training
-        StimLevel = 3;
+        StimLevel = 0.3;
     else
         StimLevel = sc.curLevel;
     end

@@ -5,18 +5,18 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMod
 
     if fixCross
         if stereoMode == 101
-            length = 276;
-            height = 552;
+            length = x0;
+            height = y0/2;
         elseif stereoMode == 100
-            height = 276;
-            length = 552;
-        else % debug purposes
-            length = 552;
-            height = 552;
+            height = x0/2;
+            length = y0;
+        else
+            height = x0;
+            length = y0;
         end
     else
-        length = 552;
-        height = 552;
+        length = x0;
+        height = y0;
     end
 
     width = 20;
@@ -57,5 +57,4 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMod
     [FFLw, FFRw, FFLb, FFRb] = createFusionFrames(x0, y0, x1, x2, x3, x4, x5, y1, y2, y3, y4, y5, width, xfCA, yfCA, xfCB, yfCB, baseFusionRectH, baseFusionRectV);
 
 end
-
 

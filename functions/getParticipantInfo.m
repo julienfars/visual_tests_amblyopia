@@ -3,12 +3,12 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
 
     % Common prompt and default values for both tests
     commonPrompt = {'Enter subject number:', 'Distance from screen (mm)', 'Which eye(s) is/are tested? (Left/Right/Both)', 'Which eye is amblyopic? (Left/Right)'};
-    commonDefaults = {global_param.ID, num2str(global_param.distance_Snellen), global_param.EYE_TEST, global_param.AMB_EYE};
+    commonDefaults = {global_param.ID, num2str(global_param.distance), global_param.EYE_TEST, global_param.AMB_EYE};
 
     if contains(current_test, 'snellen') || contains(current_test, 'snellen_crowded')
         % Snellen-specific values
         commonPrompt = [commonPrompt {'EDF file name?'}];
-        commonDefaults = [commonDefaults {''}];
+        commonDefaults = {global_param.ID, num2str(global_param.distance_Snellen), global_param.EYE_TEST, global_param.AMB_EYE};
     else
         % Other test-specific values
         commonPrompt = [commonPrompt {'Stimuli size', 'EDF file name?'}];
