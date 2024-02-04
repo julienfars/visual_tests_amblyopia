@@ -64,8 +64,8 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 %% Screen Parameters
 % Call the function to set up screen parameters
 debug = 1;
-stereoMode = 100;
-[window, windowRect, width, height, black, white] = setupScreen(stereoMode, debug);
+stereo = []; % is supposed to be 100 when using display++
+[window, windowRect, width, height, black, white] = setupScreen(stereo, debug);
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
@@ -124,7 +124,7 @@ mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
  %% Start the experiment 
 [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
 doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')
-counter_trial = [];
+counter_trial = 0;
 while ~sc.isFinished           % keep looping until staircase concludes
   
    [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
@@ -160,10 +160,14 @@ if contains(value, 'ESCAPE')
 end
 
    %% Record/display the results
-   mrt = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, propertiesMat(2), []);
-   temps = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
-   plotStaircaseValues(sc, temps, mean_reversals, []);
-   
+   [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), []);
+   if sc.isFinished
+   [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
+   else 
+       mean_reversals = 0;
+   end
+   plotStaircaseValues(sc, temps, mean_reversals, [], propertiesMat(2), current_test, [], []);
+
    %% 'Wash' the display
    % after the stim was displayed, we wash the screen by displaying a
    % background colour surface on the stim area

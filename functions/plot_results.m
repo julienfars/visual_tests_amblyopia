@@ -5,12 +5,12 @@ function plot_results(staircase_ended, table, mean, numstaircase)
         subplot(2, 3, numstaircase);
     end
 
-    if table{1, 1} >= 1
+    if table{1, 3} >= 1
         if ~isempty(numstaircase)
             idx = any(table{:, 1} == numstaircase, 2);
-            data = table(idx, {'Level'});
+            data = table(idx, 8);
         else
-            data = table(:, {'Level'});
+            data = table(:, 8);
         end
 
         data(all(~data{:,:}, 2), :) = [];

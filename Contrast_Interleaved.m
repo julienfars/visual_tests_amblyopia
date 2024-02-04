@@ -177,7 +177,6 @@ drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, pro
 beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
 Screen('Flip', window);
 
-
 %% eyelink - start recording
 [err] = eyelink_start_recording(var_eye_link);
 

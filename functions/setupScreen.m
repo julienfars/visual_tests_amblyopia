@@ -1,9 +1,9 @@
 %% Function to set up screen parameters
 function [window, windowRect, width, height, black, white] = setupScreen(stereo, debug)
     % Check platform for sync tests
-    if ismac || isunix
+    if isunix
         Screen('Preference', 'SkipSyncTests', 0);
-    elseif ispc
+    elseif ismac || ispc
         oldSyncLevel = Screen('Preference', 'SkipSyncTests', 1);
     else
         disp('Platform not supported')
@@ -41,8 +41,8 @@ function [window, windowRect, width, height, black, white] = setupScreen(stereo,
         PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
         [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], []);
     elseif isempty(stereo) && debug
-        PsychImaging('PrepareConfiguration');
-        PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
+        %PsychImaging('PrepareConfiguration');
+        %PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
         [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 400 400], [], []);
     end
 
