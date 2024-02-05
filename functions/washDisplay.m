@@ -1,4 +1,4 @@
-function washDisplay(window, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w)
+function washDisplay(window, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w, black, white)
     % 'Wash' the display
     % After the stimulus was displayed, we wash the screen by displaying a
     % background color surface on the stimulus area

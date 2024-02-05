@@ -6,6 +6,7 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
 % with the visual training (see Liu et al. 2019). At the moment, the fix cross is only shown
 % once. But with a slight modification, we can display it before each
 % trial.
+
  if ~fixCross
     [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = deal([],[],[],[],[],[],[],[]);
  else
@@ -35,8 +36,14 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
                 end
     
                 % Draw the half crosses to the screen
-                drawHalfCross(window, black, white, HC1, FF1b, FF1w);
-    
+                if contains(AMB_EYE, 'Left')
+                drawHalfCross(window, black, white, HC1, FF1b, FF1w, 0);
+                drawHalfCross(window, black, white, HC2, FF2b, FF2w, 1);
+                else
+                drawHalfCross(window, black, white, HC1, FF1b, FF1w, 1);
+                drawHalfCross(window, black, white, HC2, FF2b, FF2w, 0);
+                end
+
                 % Flip to the screen
                 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
@@ -77,8 +84,13 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
                 end
     
                 % Draw the half crosses to the screen
-                drawHalfCross(window, black, [], HC1, []);
-                drawHalfCross(window, black, [], HC2, []);
+                if contains(AMB_EYE, 'Left')
+                drawHalfCross(window, black, white, HC1, [], [], 0);
+                drawHalfCross(window, black, white, HC2, [], [], 1);
+                else
+                drawHalfCross(window, black, white, HC2, [], [], 1);
+                drawHalfCross(window, black, white, HC1, [], [], 0);
+                end
     
                 % Flip to the screen
                 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
@@ -119,16 +131,20 @@ end
     
     end
     
-    function drawHalfCross(window, black, white, HC, FF)
+    function drawHalfCross(window, black, white, HC, FFa, FFb, EYE)
     % Draws the half cross to the screen
-    
-    % Half cross
-    Screen('SelectStereoDrawBuffer', window, 0);
-    Screen('FillRect', window, black, HC);
-    if ~isempty(FF)
-        Screen('FillRect', window, white, FF);
+    if ~nargin < 7
+    Screen('SelectStereoDrawBuffer', window, EYE);
     end
-    
+
+    Screen('FillRect', window, black, HC);
+    if ~isempty(FFa)
+        Screen('FillRect', window, white, FFa);
+    end
+    if ~isempty(FFb)
+        Screen('FillRect', window, black, FFb);
+    end
+       
     Screen('Flip', window);
     
     end

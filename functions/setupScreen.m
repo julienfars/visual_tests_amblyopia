@@ -30,12 +30,18 @@ function [window, windowRect, width, height, black, white] = setupScreen(stereo,
         PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
         PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
         [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], [], [], stereo);
+        %load MyGammaTable % we load the gamma table we want to use for this
+        %experiment
+        %Screen(%LoadNormalizedGammaTable , win, gammaTable*[1 1 1]);
     elseif ~isempty(stereo) && debug
         PsychImaging('PrepareConfiguration');
         PsychImaging('AddTask', 'General', 'InterleavedLineStereo', 0);
         PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
         % Open a small PsychImaging window in the corner for debugging
         [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [0 0 400 400], [], [], stereo);
+        %load MyGammaTable % we load the gamma table we want to use for this
+        %experiment
+        %Screen(%LoadNormalizedGammaTable , win, gammaTable*[1 1 1]);
     elseif isempty(stereo) && ~debug
         PsychImaging('PrepareConfiguration');
         PsychImaging('AddTask', 'General', 'FloatingPoint32BitIfPossible');
