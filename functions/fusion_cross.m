@@ -12,14 +12,14 @@ function [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fix
     vsize = v / DisplaySize(2); %pix per mm in vertical
 
     PixelPerDeg = 1 / atand(1 / hsize / global_param.distance); %pixels per dva
-    hpixel = 1 / PixelPerDeg * 60;
-    vpixel = 1 / PixelPerDeg * 60;
+    hpixel = (1 / PixelPerDeg) * 60;
+    vpixel = (1 / PixelPerDeg) * 60;
 
     if fixCross
-        if stereo == 100
+        if stereo == 101
             fixGapV = round(10 / vpixel / 2);
             fixGapH = round(10 / vpixel);
-        elseif stereo == 101
+        elseif stereo == 100
             fixGapV = round(10 / vpixel);
             fixGapH = round(10 / vpixel / 2);
         else 
@@ -35,9 +35,15 @@ function [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fix
     b = round(100 / hpixel); % length in pixels was 40
 
     if fixCross
+        if stereo == 101
         baseRectH = round([0 0 b a * 0.5]);
         baseRectV = round([0 0 a b * 0.5]);
         baseSquare = round([0 0 b - a (b - a) * 0.5]);
+        elseif stereo == 100
+        baseRectH = round([0 0 b * 0.5 a]);
+        baseRectV = round([0 0 a* 0.5 b]);
+        baseSquare = round([0 0 (b - a) * 0.5 (b - a)]);
+        end
     else
         baseRectH = [0 0 b a];
         baseRectV = [0 0 a b];

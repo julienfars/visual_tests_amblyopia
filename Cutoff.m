@@ -63,8 +63,8 @@ global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the 
 
 %% Screen Parameters
 % Call the function to set up screen parameters
-debug = 1;
-stereo = []; % is supposed to be 100 when using display++
+debug = 0;
+stereo = 100; % is supposed to be 100 when using display++
 [window, windowRect, width, height, black, white] = setupScreen(stereo, debug); % look into this function to change the gamma table parameters
 
 %% Eyelink Calibration
@@ -82,7 +82,7 @@ eyelink_clear_screen(var_eye_link,el)
 %% Fusion crosses/frames
 % will start if the participant has starbismus AND is testing BE 
 [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereo); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
-[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereo); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
+[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCross, stereo); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
 
 %% Basic Gabor parameters
 % Call the function to set up basic Gabor parameters
@@ -126,15 +126,18 @@ mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')
 counter_trial = 0;
 fixCross = 1; % put to one to display fixation cross (keep at zero unless debugging)
+
 while ~sc.isFinished           % keep looping until staircase concludes
   
-   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPress, black, white, ifi, current_test);
+[HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, ...
+    escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, doubleScreen, AMB_EYE, EYE_TEST, ...
+    HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, ...
+    black, white, ifi, current_test);
 
-   % Randomisation
+% Randomisation
 [angular, orientation] = randomizeOrientation();
 
- % Call the function for training trials
+% Call the function for training trials
 num_training = 5; % Number of training trials
 propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix, aspectRatio, phase, contrast);
 
@@ -142,12 +145,14 @@ propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix, aspectRa
 eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
  %% display the stim
-    [dstGab_center1, dstGab_center2] = drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w, black, white);
+[dstGab_center1, dstGab_center2] = drawGaborStimulus(window, gabortex, stereo, ...
+AMB_EYE, EYE_TEST, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, ...
+FF1b, FF1w, FF2b, FF2w, black, white);
 
-    % Flip to the screen
-    beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is tested)
-    Screen('Flip', window);
-    onsetTime = GetSecs;
+% Flip to the screen
+beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is tested)
+Screen('Flip', window);
+onsetTime = GetSecs;
 
 %% Eyelink recording
 % we start recording the trial here
@@ -155,30 +160,30 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 
 %% Wait for a button press
 [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
-    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2)
+    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
 temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, EYE_TEST, AMB_EYE, contrast, propertiesMat(2), orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
         break;
 end
 
-   %% Record/display the results
-   [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), []);
-   if sc.isFinished
-   [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
-   else 
-       mean_reversals = 0;
-   end
-   plotStaircaseValues(sc, temps, mean_reversals, [], propertiesMat(2), current_test, [], []);
+%% Record/display the results
+[mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), []);
+if sc.isFinished
+[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
+else 
+   mean_reversals = 0;
+end
+plotStaircaseValues(sc, temps, mean_reversals, [], propertiesMat(2), current_test, [], []);
 
-   %% 'Wash' the display
-   % after the stim was displayed, we wash the screen by displaying a
-   % background colour surface on the stim area
-   washDisplay(window, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w, black, white);
+%% 'Wash' the display
+% after the stim was displayed, we wash the screen by displaying a
+% background colour surface on the stim area
+washDisplay(window, AMB_EYE, EYE_TEST, HC1, HC2, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w, black, white);
 
-   %% Stop the eyelink recording
-   WaitSecs(1);
-   eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
-   
+%% Stop the eyelink recording
+WaitSecs(1);
+eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
+
 end
 
 %% Eyelink close edf and save
