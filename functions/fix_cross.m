@@ -87,9 +87,11 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
                 if contains(AMB_EYE, 'Left')
                 drawHalfCross(window, black, white, HC1, [], [], 0);
                 drawHalfCross(window, black, white, HC2, [], [], 1);
+                Screen('Flip', window);
                 else
                 drawHalfCross(window, black, white, HC2, [], [], 1);
                 drawHalfCross(window, black, white, HC1, [], [], 0);
+                Screen('Flip', window);
                 end
     
                 % Flip to the screen
@@ -144,9 +146,7 @@ end
     if ~isempty(FFb)
         Screen('FillRect', window, black, FFb);
     end
-       
-    Screen('Flip', window);
-    
+           
     end
     
     function washUpScreen(window, HC1, FF1b, FF1w)

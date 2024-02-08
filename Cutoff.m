@@ -154,7 +154,8 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
 [err] = eyelink_start_recording(var_eye_link);
 
 %% Wait for a button press
-[rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc, temps, counter_trial, orientation, current_test, fixCross);
+[rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
+    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2)
 temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, EYE_TEST, AMB_EYE, contrast, propertiesMat(2), orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
         break;
@@ -177,7 +178,7 @@ end
    %% Stop the eyelink recording
    WaitSecs(1);
    eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
-     
+   
 end
 
 %% Eyelink close edf and save

@@ -50,18 +50,68 @@ end
 
 function [HCl, HCr, pixelsPerPress] = createHalfCrosses(windowRect, centerHsti, centerV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare)
 
-    [xCenter, ~] = RectCenter(windowRect);
-    [~, yCA] = RectCenter(baseRectV);
-    [~, xCB] = RectCenter(baseRectH);
+    %[xCenter, ~] = RectCenter(windowRect);
+    %[~, yCA] = RectCenter(baseRectV);
+    %[~, xCB] = RectCenter(baseRectH);
+    % Get the centre coordinate of the window
+[xCenter, yCenter] = RectCenter(windowRect);
 
-    HCl = createHalfCross(windowRect, centerHsti, centerV - yCA - fixGapV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare, xCenter, xCB);
-    HCr = createHalfCross(windowRect, centerHsti, centerV + yCA + fixGapV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare, xCenter, xCB);
+%get the center of the squares 
+[xSquare, ySquare] = RectCenter(baseSquare);
 
+%get the center of the vertical cross arrow 
+[xCA, yCA] = RectCenter(baseRectV);
+
+%get the center of the vertical cross arrow 
+[xCB, yCB] = RectCenter(baseRectH);
+    %HCl = createHalfCross(windowRect, centerHsti, centerV - yCA - fixGapV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare, xCenter, xCB);
+    %HCr = createHalfCross(windowRect, centerHsti, centerV + yCA + fixGapV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare, xCenter, xCB);
+    %first half cross
+    HCl(:, 1) = CenterRectArrayOnPoint(baseRectV, ...
+            centerHsti,...
+            centerV-yCA-fixGapV); % top cross arrow
+    HCl(:, 2) = CenterRectArrayOnPoint(baseRectH, ...
+            centerHsti-fixGapH-xCB,...
+            centerV); % left cross arrow 
+    HCl(:, 3) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti-fixGapH-xCA-xCB,...
+            centerV-yCA-fixGapV-yCB);% top left square
+    HCl(:, 4) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti+fixGapH+xCA+xCB,...
+            centerV-yCA-fixGapV-yCB); % top right square 
+    HCl(:, 5) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti-fixGapH-xCA-xCB,...
+            centerV+fixGapV+yCA+yCB); % bottom left square 
+    HCl(:, 6) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti+fixGapH+xCA+xCB,...
+            centerV+fixGapV+yCA+yCB); % bottom right square
+    
+    %second half cross
+    
+    
+    HCr(:, 1) = CenterRectArrayOnPoint(baseRectV, ...
+            centerHsti,...
+            centerV+yCA+fixGapV); % bottom cross arrow 
+    HCr(:, 2) = CenterRectArrayOnPoint(baseRectH, ...
+            centerHsti+fixGapH+xCB,...
+            centerV); % right cross arrow 
+    HCr(:, 3) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti-fixGapH-xCA-xCB,...
+            centerV-yCA-fixGapV-yCB);% top left square
+    HCr(:, 4) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti+fixGapH+xCA+xCB,...
+            centerV-yCA-fixGapV-yCB); % top right square 
+    HCr(:, 5) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti-fixGapH-xCA-xCB,...
+            centerV+fixGapV+yCA+yCB); % bottom left square 
+    HCr(:, 6) = CenterRectArrayOnPoint(baseSquare, ...
+            centerHsti+fixGapH+xCA+xCB,...
+            centerV+fixGapV+yCA+yCB); % bottom right square
     pixelsPerPress = 1;
+
 end
-
+%{
 function halfCross = createHalfCross(windowRect, centerHsti, centerY, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare, xCenter, xCB)
-
     halfCross = zeros(4, 6);
 
     halfCross(:, 1) = CenterRectArrayOnPoint(baseRectV, centerHsti, centerY);
@@ -71,5 +121,7 @@ function halfCross = createHalfCross(windowRect, centerHsti, centerY, fixGapH, f
     halfCross(:, 5) = CenterRectArrayOnPoint(baseSquare, centerHsti - fixGapH - xCB, centerY + fixGapV + baseRectV(4) / 2);
     halfCross(:, 6) = CenterRectArrayOnPoint(baseSquare, centerHsti + fixGapH + xCB, centerY + fixGapV + baseRectV(4) / 2);
 
+
 end
+%}
 
