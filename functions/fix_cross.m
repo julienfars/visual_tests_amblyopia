@@ -50,20 +50,28 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
                     case contains(EYE_TEST, 'Left')
                         buffer_r = 0;
                         buffer_l = 0;
+                        contrast_l = [];
+                        contrast_r = [];
                     case contains(EYE_TEST, 'Right')
                         buffer_r = 1;
                         buffer_l = 1;
+                        contrast_l = [];
+                        contrast_r = [];
                     case contains(AMB_EYE, 'Left') && contains(EYE_TEST, 'Both')
                         buffer_r = 1;
                         buffer_l = 0;
+                        contrast_l = 1;
+                        contrast_r = 0.6;
                     case contains(AMB_EYE, 'Right') && contains(EYE_TEST, 'Both')
                         buffer_r = 0;
                         buffer_l = 1;
+                        contrast_r = 1;
+                        contrast_l = 0.6;
                     otherwise
                         disp('Other combination of x and y');
                 end
-                drawHalfCross(window, black, white, HC1, FF1w, FF1b, buffer_l);
-                drawHalfCross(window, black, white, HC2, FF2w, FF2b, buffer_r);
+                drawHalfCross(window, black, white, HC1, FF1w, FF1b, buffer_l, contrast_l);
+                drawHalfCross(window, black, white, HC2, FF2w, FF2b, buffer_r, contrast_r);
                 % Flip to the screen
                 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
@@ -181,14 +189,21 @@ function cross = moveCross(cross, direction, pixelsPerPress)
     end
     
     end
-    
-    function drawHalfCross(window, black, white, HC, FFa, FFb, EYE)
+
+    function drawHalfCross(window, black, white, HC, FFa, FFb, EYE, ctrst)
         % Draws the half cross to the screen
         if ~nargin < 7
         Screen('SelectStereoDrawBuffer', window, EYE);
         end
-    
-        Screen('FillRect', window, black, HC);
+
+        if isempty(ctrst)
+            ctrst = 1;
+        end
+
+        if ~isempty(HC)
+        Screen('FillRect', window, black+(1-ctrst), HC);
+        end
+
         if ~isempty(FFa)
             Screen('FillRect', window, white, FFa);
         end

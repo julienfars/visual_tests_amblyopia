@@ -1,6 +1,11 @@
 function [dstGab_center1, dstGab_center2] = drawGaborStimulus(window, gabortex, stereo, ...
     AMB_EYE, EYE_TEST, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, ...
     FF1b, FF1w, FF2b, FF2w, black, white)
+
+    if isempty(diff)
+        diff = [0,0];
+    end
+    
     if ~isempty(stereo)
         % Draw on the left screen
         if stereo==100

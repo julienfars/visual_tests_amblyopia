@@ -14,7 +14,6 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCr
     size_frame = ceil(PixelPerDeg*4.45);
     
 %careful, use the 4,4 x 4,4 dva instead of pixels (will look too lengthy and not large enough otherwise)
-    if fixCross
         if stereo == 100
             length = size_frame;
             height = size_frame/2;
@@ -25,10 +24,7 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCr
             length = size_frame;
             height = size_frame;
         end
-    else
-        length = size_frame;
-        height = size_frame;
-    end
+
 
     width = round(size_frame/27);
 
@@ -46,7 +42,6 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCr
 
     Rectlarge = round((x2) - (x1)); %large size of the rectangles
 
-    if fixCross
         if stereo == 100
             baseFusionRectH = round([0 0 Rectlarge width * 0.5]);
             baseFusionRectV = round([0 0 width Rectlarge * 0.5]);
@@ -57,10 +52,7 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCr
             baseFusionRectH = [0 0 Rectlarge width];
             baseFusionRectV = [0 0 width Rectlarge];
         end
-    else
-        baseFusionRectH = [0 0 Rectlarge width];
-        baseFusionRectV = [0 0 width Rectlarge];
-    end
+    
 
     [xfCA, yfCA] = RectCenter(baseFusionRectH);
     [xfCB, yfCB] = RectCenter(baseFusionRectV);
