@@ -42,11 +42,10 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
     % Additional parameters for the modified code (conditionally set)
     if contains(current_test, 'contrast_interleaved')
         prompt_additional = {'Frequencies shorted list (change it if needed, must be [0:1])', 'Cut-off frequency'};
-        defaults_additional = {'0.125 0.25 0.5 0.75', '-'};
+        defaults_additional = {num2str(global_param.freqs), '-'};
         answer_additional = inputdlg(prompt_additional, 'Additional Parameters', 2, defaults_additional); % Opens dialog window
         FREQS_test = str2num(answer_additional{1, :});
-        CUTOFF = str2double(answer_additional{2, :});
-
+        CUTOFF = answer_additional{2, :};
         % Conditionally set CUTOFF based on the eye and amblyopic status
         if contains(CUTOFF, '-')
             if contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Left') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Right')
@@ -58,8 +57,15 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
             else
                 CUTOFF = global_param.cut_off;
             end
+            if ~isnumeric(CUTOFF)
+                CUTOFF = str2double(CUTOFF);
+            end
+        else
+            if ~isnumeric(CUTOFF)
+                CUTOFF = str2double(CUTOFF);
+            end
         end
-
+        
     elseif contains(current_test, 'interocular_imbalance')
         CUTOFF = [];
         prompt_additional = {'Frequencies list (change it if needed, must be [0:1])', 'normal observer? [yes/no]'};

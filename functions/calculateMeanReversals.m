@@ -20,6 +20,7 @@ function [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc,
         temps(sc.trialCount + 1, :) = {sc.trialCount + 1, sc.revCount, mean_reversals, 'MEAN', 'none', 0, Stim_position, EYE_TEST, AMB_EYE, 0, datetime('now')};
         
     else
+        mean_reversals = [];
         % Check if the staircase is finished
         if sc.isFinished
             % Extract relevant rows from mrt table for the specified staircase

@@ -17,9 +17,9 @@ function [gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParam
     % Calculate horizontal size in pixels per degree
     PixelPerDeg = gaborDimPix / stim_size;
 
-    if contains(current_test, 'interocular_imbalance')
+    if contains(current_test, 'interocular_imbalance') || contains(current_test, 'contrast_interleaved')
         pix_size = 1/DIM_Screen_hor; % the size of 1 pixel in cm 
-        size_stim_pix = round(2*distance*tand(SIZE/2)/pix_size); % size of the stim in pixels, we round it so it is easier to display
+        size_stim_pix = round(2*distance*tand(stim_size/2)/pix_size); % size of the stim in pixels, we round it so it is easier to display
         E_min_size_dva = 1;
         size_dva = 2*distance*tand(E_min_size_dva/2)/pix_size; % divide the freq in cpd by size_dva to obtain the size in cpp 
         FREQS = FREQS_test./size_dva; % here we convert cpd (cycles per dva) in cpp (cycles per pixels) 

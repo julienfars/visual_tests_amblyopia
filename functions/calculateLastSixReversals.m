@@ -1,4 +1,4 @@
-function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, counter_mrt, var1, var2)
+function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, counter_mrt, var1, var2, iSC)
     % Calculate the last six reversals and record in the mrt table
     
     recordReversal = sc.trialCount > num_training + 1;
@@ -10,7 +10,17 @@ function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_trai
             mrt(sc.revCount, :) = {sc.revCount, var1}; % Recorded in a table titled mrt
 
         case 'contrast_interleaved'
-            recordReversal = recordReversal && (sc.trialCount > 2) && (temps{sc.trialCount,{'Reversal'}} ~= temps{sc.trialCount-1,{'Reversal'}}) && (sc.revCount ~= 0);
+            % Example usage
+            trial_num = 'Trial'; % Specify the name of the column you want to search
+            value = sc.trialCount; % Specify the value you want to find
+            
+            % Find the row number of the last row where the value in column X matches the specified value
+            trialCount = findLastRowIndexWithValue(temps, trial_num, value);
+            
+            % Retrieve the value from the specified column using the row number
+            trialCount_2 = findLastRowIndexWithValue(temps, trial_num, value-1);
+
+            recordReversal = recordReversal && (sc.trialCount > 2) && (temps{trialCount, 4}) ~= (temps{trialCount_2, 4}) && (sc.revCount ~= 0);
             mrt(counter_mrt, :) = {sc.revCount, var1, iSC}; % Recorded in a table titled mrt
             counter_mrt = counter_mrt + 1;
 

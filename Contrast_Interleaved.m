@@ -42,11 +42,16 @@ KbName('UnifyKeyNames'); %set up the keyboard for answers
 %% initialisation of eyelink
 [dummymode, var_eye_link] = eyelink_init(1);
 
-%% retrieve data from previous test 
-New_patient = []; % set to empty as the battery of tests should not start by this test
-global_param = initializeNewPatient(New_patient);
+%% Same patient? Retest? 
+% This battery of test will be performed thrice on the same session (FE, AE and BE)
+% And thrice for each participant (training, test and retest)
+New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
+global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
+retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
+global_param.Retest = contains(retest, 'true');% Set retest variable
 
 %% reduced version  
+% not functional yet?
 global_param = initializeReduced(global_param);
 
 %% Participant Information 
@@ -55,48 +60,49 @@ global_param = initializeReduced(global_param);
 current_test = 'contrast_interleaved';
 
 % Call the function to get participant information
-[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, CUTOFF] = getParticipantInfo(global_param, contrast_interleaved);
+[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test...
+    , CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
 
 %% launch eyelink parameters
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
 
-%% Screen stuff
+%% Screen Parameters
 % Call the function to set up screen parameters
-[window, windowRect, width, height] = setupScreen();
+debug = 0;
+stereo = 100; % is supposed to be 100 when using display++
+[window, windowRect, width, height, black, white] = setupScreen(stereo, debug); % look into this function to change the gamma table parameters
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
-[el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
 
 %% Other parameters
 % Call the function to set up other parameters
-[xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect);
+[xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, ...
+    skipKey] = setupOtherParameters(window, windowRect);
 
 %% clear screen of host PC 
 % clears the screen of the host PC so we can start the test
-
 eyelink_clear_screen(var_eye_link,el)
 
 %% Fusion crosses/frames
-[HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereoMode); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
-[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMode); % fusion frame function, used all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
+[HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereo); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
+[FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCross, stereo); % fusion frame function, used at all time. The resulting variables are the black and white parts of the fusion frame (and  for both eyes)
 
 %% Basic Gabor parameters
-
 % Call the function to set up basic Gabor parameters
-[gaborDimPix, PixelPerDeg] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size);
-
+[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, ...
+    global_param.screen_size, global_param.distance, global_param.stim_size, FREQS_test, current_test);
+FREQS = FREQS.*CUTOFF; 
 %% Other Gabor Parameters 
-
 [gabortex, aspectRatio, phase, contrast] = createGaborTexture(window, gaborDimPix, current_test);
 
 %% Interleaved Staircases
-
 % Query the frame duration
 ifi = Screen('GetFlipInterval', window);
 
 sc_num_freqs = 3;
-scRightRules = repelem(sc_num_freqs,num_freqs);
+scRightRules = repelem(sc_num_freqs,length(FREQS_test));
 numStaircases   = numel(scRightRules);%scRightRules    = [3, 3, 3, 3, 3, 3]; 
 
     % these parameters control the staircase 
@@ -131,7 +137,7 @@ temps = createTable(maxNumTrials, nb_table, ["string", "datetime", "double", "do
     ["Task", "Date_time", "Trial", "Reversal", "AMB_eye", "Eye_tested", "Contrast", "Staircase",...
     "Frequency_dva", "Orientation", "Position", "Key", "Success", "RT"]);
 
-%% creating the reversals table
+%% Mean reversals table
 mrt = createMRTTable(maxNumReversals, nb_table, 'interleaved');
 counter_mrt = 1;
 
@@ -140,68 +146,75 @@ counter_mrt = 1;
 % this table will not be saved after the test but we use it to generate the threshold
 mt = createMTTable(nb_table, 'interleaved');
 
-%% launch the experiment staircase
-    counter_trial = 1;
-    doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')
-    while ~all([staircaseArray(:).isFinished])% keep looping until all staircases conclude
-        
-   % run the fixing cross before the trial
-   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress);
+%% Start the experiment
+    [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
+    counter_trial = 0;
+    doubleScreen = false;      % this value will determine when to show the half cross (see fix_cross function)
+    %fixCross = 1; % put to one to display fixation cross (keep at zero unless debugging)
 
-   % Randomisation
+while ~all([staircaseArray(:).isFinished])% keep looping until all staircases conclude
+    
+[HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, ...
+escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, doubleScreen, AMB_EYE, EYE_TEST, ...
+HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, ...
+black, white, ifi, current_test);
+
+% Randomisation
 [angular, orientation] = randomizeOrientation();
 
-    % select a random unfinished staircase
+% select a random unfinished staircase
+iSC = randi(numStaircases);
+while staircaseArray(iSC).isFinished
     iSC = randi(numStaircases);
-    while staircaseArray(iSC).isFinished
-        iSC = randi(numStaircases);
-    end
-        
-    StimLevel = staircaseArray(iSC).curLevel;                   % testing level from staircase
-    linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
-    freq = FREQS(iSC);                         % match the randomly chosen staircase
-    contrast = linStimLevel/100;               % /100 to get the percentage 0-1 = 0-100%
-    sigma = gaborDimPix/6;                                % could be changed but 12 has the best visual effect 
-    % make a properties matrix for the Gabor
-    propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
+end
+% think about including this part in trainingTrialsProperties when I have time  
+num_training = 0; % not implemented yet, set at 0 
+StimLevel = staircaseArray(iSC).curLevel;                   % testing level from staircase
+linStimLevel = (10^StimLevel);             % convert to linear units - let's try but I am not sure
+freq = FREQS(iSC);                         % match the randomly chosen staircase
+contrast = linStimLevel/100;               % /100 to get the percentage 0-1 = 0-100%
+sigma = gaborDimPix/6;                                % could be changed but 12 has the best visual effect 
+% make a properties matrix for the Gabor
+propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
     
 %% Eyelink Start trial
 eyelink_start_trial(var_eye_link, staircaseArray(iSC).trialCount, orientation, [])
 
  %% display the stim
 
-drawGaborStimulus(window, gabortex, doubleScreen, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
+[dstGab_center1, dstGab_center2] = drawGaborStimulus(window, gabortex, stereo, ...
+AMB_EYE, EYE_TEST, xCenter, yCenter, angular, propertiesMat, gaborDimPix, diff, ...
+FF1b, FF1w, FF2b, FF2w, black, white);
 
 % Flip to the screen
 beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
 Screen('Flip', window);
+onsetTime = GetSecs; 
 
 %% eyelink - start recording
 [err] = eyelink_start_recording(var_eye_link);
 
 %% Wait for a button press
-
-    onsetTime = GetSecs;
-    [rt, value, key, temps, counter_trial] = waitForButtonPress(onsetTime, var_eye_link, escapeKey, rightKey, leftKey, angular, sc, temp, counter_trial);
-    % add temps here!!!
-    if contains(value, 'ESCAPE')
-        break;
-    end
-    [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, contrast);
-    [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, freq, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt);
-    plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, []);
+[rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
+    angular, staircaseArray(iSC), temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
+temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, EYE_TEST, AMB_EYE, contrast, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, key, value, rt};
+if contains(value, 'ESCAPE')
+    break;
+end
+[mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);
+[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt);
+plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, contrast, current_test, [], []);
 
 %% 'Wash' the display
-   % after the stim was displayed, we wash the screen by displaying a
-   % background colour surface on the stim area
-   washDisplay(window, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w);
+% after the stim was displayed, we wash the screen by displaying a
+% background colour surface on the stim area
+washDisplay(window, AMB_EYE, EYE_TEST, HC1, HC2, doubleScreen, windowRect, dstGab_center1, dstGab_center2, FF1b, FF1w, FF2b, FF2w, black, white);
 
-   %% Stop the eyelink recording 
-    WaitSecs(1);
-       eyelink_stop_recording_and_write_variables(var_eye_link,staircaseArray(iSC).trialCount, orientation, [])
+%% Stop the eyelink recording 
+WaitSecs(1);
+   eyelink_stop_recording_and_write_variables(var_eye_link,staircaseArray(iSC).trialCount, orientation, [])
 
-    end
+end
 %% eyelink - close the edf file
  newName = ['Contrast_Interleaved_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
 [status] = eyelink_close_edf_file(var_eye_link,dummymode,el,window,height, edfFile, newName);
@@ -211,19 +224,14 @@ sca;
 
 %% Results table
 % export data table from staircase object into an xls file
-baseFileName = SUBJECT + "_" + date + '_contrast_interleaved';
-
+baseFileName = SUBJECT + "_" + char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')) + '_contrast_interleaved';
 [filename, global_param] = results_table(baseFileName, global_param, EYE_TEST, AMB_EYE, mt);
-
 writetable(temps,filename)
-
 fprintf('Output saved in: %s\n', filename)
 
 %% ending the script
-
-global_param.pix_shift = diff(1:2,1);
+if ~isempty(diff)
+    global_param.pix_shift = diff(1:2,1);
+end
 global_param.EYE_TEST = '?';
-
 save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
-
-% end of the script 

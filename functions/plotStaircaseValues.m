@@ -10,7 +10,7 @@ function plotStaircaseValues(sc, temps, mean_reversals, iSC, freq, current_test,
             else   
             plot_results(sc.isFinished, temps, contrast, iSC); 
             end
-        else
+        elseif contains(current_test, 'contrast_sensitivity')
             plot_results(sc.isFinished, temps, freq, iSC);
         end
     end

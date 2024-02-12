@@ -168,7 +168,7 @@ if contains(value, 'ESCAPE')
 end
 
 %% Record/display the results
-[mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), []);
+[mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), [], []);
 if sc.isFinished
 [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
 else 
@@ -203,6 +203,9 @@ fprintf('Output saved in: %s\n', filename)
 
 %% ending the script
 global_param.EYE_TEST = '?'; % ready for the next launch
+if ~isempty(diff)
+    global_param.pix_shift = diff(1:2,1);
+end
 save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
 
 % end of the script 
