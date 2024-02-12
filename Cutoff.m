@@ -1,33 +1,6 @@
-%{
-Welcome to the Amblyopia Study Test Battery.
+%% Variables
 
-This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
-If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
 
-Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
-
-This battery utilizes modified scripts from different researchers:
-- Alex S Baldwin (Staircase protocol)
-- Jun-Yun Zhang (Dichoptic test)
-- Alice Grasso McCaslin (Asteroid test script)
-
-Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
-%}
-
-%{
-                            CUTOFF frequency 
-This test will be done in first. The resulting gabor threshold frequency is used in the
-following tests: 
-- Contrast Interleaved
-- Binocular Orientation
-- Dichoptic test 
-
-This test must be done on each eye individually and on the two eyes
-binocularly. At the end we obtain 3 CUTOFF frequencies:
-- Fellow Eye (FE)
-- Amblyopic Eye (AE) 
-- Both Eyes (BE)
-%}
 
 %% Setup
 sca; % to clean the workspace

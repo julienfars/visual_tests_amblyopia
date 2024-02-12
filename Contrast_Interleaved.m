@@ -1,30 +1,3 @@
-%{
-Welcome to the Amblyopia Study Test Battery.
-
-This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
-If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
-
-Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
-
-This battery utilizes modified scripts from different researchers:
-- Alex S Baldwin (Staircase protocol)
-- Jun-Yun Zhang (Dichoptic test)
-- Alice Grasso McCaslin (Asteroid test script)
-
-Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
-%}
-
-%{
-                            Contrast Sensitivity
-This test will be done AFTER the CUTOFF frequency task (CUTOFF frequency is used to set up the 6 conditions of the current task)
-This test must be done on each eye individually and on the two eyes
-binocularly. At the end we obtain 6x3 contrast thresholds:
-- 6 thresholds for the Fellow Eye (FE) 
-- 6 thresholds for the Amblyopic Eye (AE) 
-- 6 thresholds for the Both Eyes (BE)
-
-%}
-
 % potential changes to make it more functional 
 %{
 - add training trials 
@@ -147,10 +120,10 @@ counter_mrt = 1;
 mt = createMTTable(nb_table, 'interleaved');
 
 %% Start the experiment
-    [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
-    counter_trial = 0;
-    doubleScreen = false;      % this value will determine when to show the half cross (see fix_cross function)
-    %fixCross = 1; % put to one to display fixation cross (keep at zero unless debugging)
+[HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
+counter_trial = 0;
+doubleScreen = false;      % this value will determine when to show the half cross (see fix_cross function)
+%fixCross = 1; % put to one to display fixation cross (keep at zero unless debugging)
 
 while ~all([staircaseArray(:).isFinished])% keep looping until all staircases conclude
     

@@ -1,21 +1,3 @@
-%{
-Welcome to the Amblyopia Study Test Battery.
-
-This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
-If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
-
-Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
-
-This battery utilizes modified scripts from different researchers:
-- Alex S Baldwin (Staircase protocol)
-- Jun-Yun Zhang (Dichoptic test)
-- Alice Grasso McCaslin (Asteroid test script)
-
-Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
-
-The eye link is not used for this test. 
-%}
-
 
 %changes to implement
 %{

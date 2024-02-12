@@ -1,6 +1,6 @@
 function time_presentation_function(window, gaborDimPix, ...
 xCenter, yCenter, diff, black, white, FF1b, FF1w, FF2b, ...
-FF2w, current_test, debug_interocular_imbalance, time)
+FF2w, current_test, debug, time)
     % This function represents the time presentation logic for a stereo Gabor stimulus.
 
     if contains(current_test, 'interocular_imbalance')
@@ -8,7 +8,7 @@ FF2w, current_test, debug_interocular_imbalance, time)
     WaitSecs(time);
 
     % Debug: Wait for a key press if debug_interocular_imbalance is true
-    if debug_interocular_imbalance
+    if debug
         KbStrokeWait;
     end
 

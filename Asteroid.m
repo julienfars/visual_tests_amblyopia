@@ -1,32 +1,4 @@
-%{
-Welcome to the Amblyopia Study Test Battery.
-
-This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
-If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
-
-Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
-
-This battery utilizes modified scripts from different researchers:
-- Alex S Baldwin (Staircase protocol)
-- Jun-Yun Zhang (Dichoptic test)
-- Alice Grasso McCaslin (Asteroid test script)
-
-Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
-%}
-
-%{
-This script is adapted from the script from ... et al (...)
-Contact them for more information about the test
-
-- modifications
-    - use of Display++ stereodisplay (use of passive 3D glasses)
-    - modification of ChangeDotColours and ChangeDotCOloursTarget.m 
-        these 2 script were using an outdated RGBA codex, was updated 
-    - modifications of the dots into ovals (because we use a single screen
-    for 3D) --> See stereotest for psychtoolbox single screen help pages
-    - modifications of the sizes of the 4 areas of the stimulus but I kept the size of
-    the dots relative to the distance (same dva)
-%}
+%% Variables 
 
 %% Setup
 sca;

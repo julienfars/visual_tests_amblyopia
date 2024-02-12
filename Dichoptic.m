@@ -1,29 +1,4 @@
-%{
-Welcome to the Amblyopia Study Test Battery.
-
-This script conducts a series of visual tests to assess various aspects of the amblyopic visual experience. 
-If you have questions, contact Juju (julien.fars@ndcn.ox.ac.uk).
-
-Note: Adjust parameters in the GetGlobalVariables.m script before running the tests.
-
-This battery utilizes modified scripts from different researchers:
-- Alex S Baldwin (Staircase protocol)
-- Jun-Yun Zhang (Dichoptic test)
-- Alice Grasso McCaslin (Asteroid test script)
-
-Inspired by Peter Scarfe's work (https://peterscarfe.com/ptbtutorials.html).
-%}
-
-%{
-                            Dichoptic test 
-Here is an attempt on making a new version (homemade) of the dichoptic
-demasking. Because it seems that all the codes I got are not flexible. 
-Attempt 1: Must find the code for the noise but the rest only concerns 
-gabors and fixation cross (+ an attention square at the beginning of each trial)
-01/03/2023 
-
-Test only done on both eyes 
-%}
+%% Variables 
 
 %% Setup
 % first we setup the screen, the workspace and the command window

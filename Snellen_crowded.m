@@ -1,36 +1,4 @@
-%{
-Welcome to the battery of tests used in the Amblyopia study. 
-If you have questions about the tests, contact Juju (julien.fars@ndcn.ox.ac.uk)
-
-This battery aims to test various functions of the amblyopic visual
-experience. 
-
-Contrary to the other tests, Snellen and Snellen Crowded need another way
-of making the stereomode. Instead on using the vertical dimension for the
-interleaved pixels, We could use the horizontal pixels (stereomode 101 instead of 100). BUT there is a risk of
-not having enough pixels to take in account the participants' strabisma. 
-If none of these problems can be fixed, then we might abandon the binocular measurements for the
-snellen and snellen crowded (especially this last one - larger).
-
-The parameters of this test (and the subsquent ones) are extracted from the GetGlobalVariables.m script and then are stored in the
-global_param.mat variable.
-
-If you use a different setting (different screen, distance from the screen,
-size of stim etc...), change the parameters in the GetGlobalVariables.m
-script. 
-
-This battery of tests is using modified scripts from several research teams
-and individuals. 
-For the original version of these scripts, contact: 
-- Alex S Baldwin - McGill Vision Research (for the staircase)
-- Jun-Yun Zhang - Beijing Key Laboratory of Behavior and Mental Health (Dichoptic test)
-- Alice Grasso McCaslin, School of Optometry, Indiana University (Asteroid test and related scripts)
-
-It is also important to note that some functions present in the battery of tests were inspired from the
-work of Peter Scarfe - Scarfe Lab (see https://peterscarfe.com/ptbtutorials.html)
-%}
-
-
+%% Variables 
 
 %% Setup
 clear all;
