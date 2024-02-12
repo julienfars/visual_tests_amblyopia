@@ -37,23 +37,28 @@ function [dstGab_center1, dstGab_center2] = drawGaborStimulus(window, gabortex, 
         Screen('SelectStereoDrawBuffer', window, buffer_l);
         Screen('DrawTextures', window, gabortex, [], dstGab_center1, angular, [], [], [], [],...
             kPsychDontDoRotation, propertiesMat');
+        if ~isempty(FF1w) && ~isempty(FF1b)
         Screen('FillRect', window, white, FF1w);
         Screen('FillRect', window, black, FF1b);
+        end
 
         Screen('SelectStereoDrawBuffer', window, buffer_r);
         Screen('DrawTextures', window, gabortex, [], dstGab_center2, angular, [], [], [], [],...
             kPsychDontDoRotation, propertiesMat'); 
+        if ~isempty(FF2w) && ~isempty(FF2b)
         Screen('FillRect', window, white, FF2w);
         Screen('FillRect', window, black, FF2b);
-    else
+        end
+    else % used for debugging
         % Draw on a single screen
         dstGab_center1 = CenterRectArrayOnPoint([0 0 1 1] .* gaborDimPix, xCenter, yCenter);
-        %dstGab_center2 = CenterRectArrayOnPoint([0 0 1 1] .* gaborDimPix, xCenter, yCenter);
         Screen('DrawTextures', window, gabortex, [], dstGab_center1, angular, [], [], [], [],...
             kPsychDontDoRotation, propertiesMat');
+        if ~isempty(FF2w) && ~isempty(FF2b) && ~isempty(FF1w) && ~isempty(FF1b)
         Screen('FillRect', window, black, FF1b);
         Screen('FillRect', window, white, FF1w);
         Screen('FillRect', window, black, FF2b);
         Screen('FillRect', window, white, FF2w);
+        end
     end
 end

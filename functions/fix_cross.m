@@ -10,7 +10,7 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
 % trial.
 
  if ~fixCross
-    [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = deal([],[],[],[],[],[],[],[]);
+    [HC1, HC2, diff, doubleScreen] = deal([],[],[],[]);% [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = deal([],[],[],[],[],[],[],[]);
  else
     % Define black and white
     if ~contains(current_test, 'snellen') || ~contains(current_test, 'snellen_crowded')
