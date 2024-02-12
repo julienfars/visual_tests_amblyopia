@@ -1,4 +1,5 @@
-function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc, temps, counter_trial, orientation, current_test, fixCross)
+function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
+    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2)
     
     timeSecs = KbWait;
     % Wait for a button press

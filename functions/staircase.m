@@ -124,24 +124,8 @@ classdef staircase < handle
                 curStepSize = sc.stepSize/2;
             elseif sc.revCount >= 4
                 curStepSize = sc.stepSize/4;
-            
-            %{  
-elseif sc.revCount == 4
-                curStepSize = sc.stepSize/2;
-            elseif sc.revCount == 5
-                curStepSize = sc.stepSize/2;
-            elseif sc.revCount == 6
-                curStepSize = sc.stepSize/2;
-            %}
             end
         end
-%{
- else
-                curStepSize = sc.stepSize;
-            end
-        end
-%}
-
             
 
         function isFinished = get.isFinished(sc) % check if finished
@@ -297,3 +281,282 @@ elseif sc.revCount == 4
     end
 
 end
+
+
+%{
+classdef Staircase < handle
+    % Staircase: A class for implementing a staircase procedure for visual experiments.
+    %
+    % Usage:
+    %   Create a staircase object: SC = Staircase(...with arguments...)
+    %   - Arguments are described under the class constructor function below.
+    %   - Current stimulus level to test is SC.curLevel.
+    %   - After a response, call SC.doResp(isCorrect) with a Boolean (0 or 1).
+    %   - Use SC.isFinished to check if the staircase is finished.
+    %   - Access data using SC.levels, SC.nTrials, and SC.nCorrect.
+
+    properties
+        % Properties of the Staircase class
+        levels
+        initStepSize
+        stepSize
+        rightRule
+        wrongRule
+        maxTrials
+        maxRevs
+        nTrials
+        trialCount
+        nCorrect
+        revCount
+        curLevel
+        curDirection
+        curRight
+        curWrong
+        verbose
+        reversals
+        ceilingBehaviour
+        requestedStartLevel
+        didJustReverse
+        numCeilingIncrements
+        maxCeilingIncrements
+        reversalDirections
+    end
+
+    properties (Dependent)
+        % Dependent properties
+        nLevels
+        minLevel
+        maxLevel
+        curIndex
+        curStepSize
+        isFinished
+        curReversalThresh
+        curReversalError
+    end
+
+    methods
+        % Public methods
+
+        function obj = Staircase(levels, initStepSize, stepSize, ...
+                                rightRule, wrongRule, maxTrials, ...
+                                maxRevs, startLevel, verbose, ...
+                                ceilingBehaviour, maxCeilingIncrements)
+            % Constructor method for the Staircase class
+            if nargin > 0
+                obj.levels = levels;
+                obj.initStepSize = initStepSize;
+                obj.stepSize = stepSize;
+                obj.rightRule = rightRule;
+                obj.wrongRule = wrongRule;
+                obj.maxTrials = maxTrials;
+                obj.maxRevs = maxRevs;
+                obj.verbose = verbose;
+                obj.requestedStartLevel = startLevel;
+
+                obj.nTrials = zeros(1, obj.nLevels);
+                obj.nCorrect = zeros(1, obj.nLevels);
+                obj.trialCount = 0;
+                obj.revCount = 0;
+                obj.curDirection = 0;
+                obj.curRight = 0;
+                obj.curWrong = 0;
+                obj.didJustReverse = 0;
+                obj.numCeilingIncrements = 0;
+                obj.reversals = [];
+                obj.reversalDirections = [];
+
+                obj.setToNearestLevel(obj.requestedStartLevel);
+                
+                if nargin < 10
+                    obj.ceilingBehaviour = 'limiting';
+                else
+                    if strcmp(ceilingBehaviour, 'limiting') || strcmp(ceilingBehaviour, 'resetting')
+                        obj.ceilingBehaviour = ceilingBehaviour;
+                    else
+                        error('Invalid ceiling behaviour, must be "limiting" or "resetting"')
+                    end
+                end
+
+                if nargin < 11
+                    obj.maxCeilingIncrements = inf;
+                else
+                    obj.maxCeilingIncrements = maxCeilingIncrements;
+                end
+            end
+            if obj.verbose
+                fprintf('\nStaircase class object initialised.\n')
+            end
+        end
+
+        function minLevel = get.minLevel(obj)
+            % Getter method for the minimum staircase level
+            minLevel = min(obj.levels);
+        end
+
+        function maxLevel = get.maxLevel(obj)
+            % Getter method for the maximum staircase level
+            maxLevel = max(obj.levels);
+        end
+
+        function nLevels = get.nLevels(obj)
+            % Getter method for the number of staircase levels
+            nLevels = length(obj.levels);
+        end
+
+        function curIndex = get.curIndex(obj)
+            % Getter method for the current staircase index
+            curIndex = find(obj.levels == obj.curLevel);
+        end
+
+        function curStepSize = get.curStepSize(obj)
+            % Getter method for the current step size
+            if obj.revCount <= 1
+                curStepSize = obj.initStepSize;
+            elseif obj.revCount == 2
+                curStepSize = obj.stepSize;
+            elseif obj.revCount == 3
+                curStepSize = obj.stepSize / 2;
+            elseif obj.revCount >= 4
+                curStepSize = obj.stepSize / 4;
+            end
+        end
+
+        function isFinished = get.isFinished(obj)
+            % Getter method to check if the staircase is finished
+            isDoneRevs = obj.revCount >= obj.maxRevs;
+            isDoneTrials = obj.trialCount >= obj.maxTrials;
+            isDoneCeilingReversals = obj.numCeilingIncrements >= obj.maxCeilingIncrements;
+            isFinished = isDoneRevs || isDoneTrials || isDoneCeilingReversals;
+        end
+
+        function curReversalThresh = get.curReversalThresh(obj)
+            % Getter method for the current reversal threshold
+            if length(obj.reversals) < 3
+                curReversalThresh = NaN;
+            else
+                curReversalThresh = mean(obj.reversals(2:end));
+            end
+        end
+
+        function curReversalError = get.curReversalError(obj)
+            % Getter method for the current reversal error
+            if length(obj.reversals) < 3
+                curReversalError = NaN;
+            else
+                curReversalError = std(obj.reversals(2:end)) / sqrt(length(obj.reversals(2:end)));
+            end
+        end
+
+        function obj = doResp(obj, isCorrect)
+            % Method to handle response and update staircase
+            obj.trialInc;
+            obj.didJustReverse = 0;
+            switch isCorrect
+                case 0
+                    obj.curWrong = obj.curWrong + 1;
+                    if obj.verbose
+                        fprintf('Incorrect response, nWrong = %0.0f\n', obj.curWrong)
+                    end
+                case 1
+                    obj.curRight = obj.curRight + 1;
+                    obj.nCorrect(obj.curIndex) = obj.nCorrect(obj.curIndex) + 1;
+                    if obj.verbose
+                        fprintf('Correct response, nRight = %0.0f\n', obj.curRight)
+                    end
+            end
+            obj.checkRules;
+        end
+    end
+
+    methods (Access = private)
+        % Private methods
+
+        function obj = trialInc(obj)
+            % Method to increment trial count
+            obj.nTrials(obj.curIndex) = obj.nTrials(obj.curIndex) + 1;
+            obj.trialCount = obj.trialCount + 1;
+            if obj.verbose
+                fprintf('Trial: %0.0f\n', obj.trialCount)
+            end
+        end
+
+        function obj = setToNearestLevel(obj, reqLevel)
+            % Method to set current level to the nearest staircase level
+            absDiff = abs(obj.levels - reqLevel);
+            obj.curLevel = obj.levels(absDiff == min(absDiff));
+        end
+
+        function obj = checkRules(obj)
+            % Method to check rules and adjust staircase if necessary
+            if obj.curRight >= obj.rightRule
+                if obj.verbose
+                    fprintf('Change level: increase.\n')
+                end
+                obj.changeLevel(1);
+            elseif obj.curWrong >= obj.wrongRule
+                if obj.verbose
+                    fprintf('Change level: decrease.\n')
+                end
+                obj.changeLevel(0);
+            end
+        end
+
+        function obj = changeLevel(obj, newDir)
+            % Method to change staircase level
+            if obj.curDirection ~= newDir
+                obj.doReversal(newDir);
+            end
+
+            switch obj.curDirection
+                case 0
+                    obj.curLevel = obj.curLevel - obj.curStepSize;
+                case 1
+                    obj.curLevel = obj.curLevel + obj.curStepSize;
+            end
+
+            if obj.curLevel > obj.maxLevel
+                obj.handleCeilingBehaviour('limiting');
+            elseif obj.curLevel < obj.minLevel
+                obj.handleCeilingBehaviour('resetting');
+            else
+                if obj.verbose
+                    fprintf('Level changed to %0.0f.\n', obj.curLevel)
+                end
+            end
+
+            obj.curRight = 0;
+            obj.curWrong = 0;
+        end
+
+        function obj = handleCeilingBehaviour(obj, behaviour)
+            % Method to handle ceiling behaviour
+            switch behaviour
+                case 'limiting'
+                    obj.curLevel = min(obj.curLevel, obj.maxLevel);
+                    if obj.verbose
+                        fprintf('Max exceeded, bound at %0.0f.\n', obj.curLevel)
+                    end
+                case 'resetting'
+                    obj.setToNearestLevel(obj.requestedStartLevel);
+                    if obj.verbose
+                        fprintf('Max exceeded, resetting to %0.2f.\n', obj.requestedStartLevel)
+                    end
+            end
+        end
+
+        function obj = doReversal(obj, newDir)
+            % Method to perform a reversal
+            obj.revCount = obj.revCount + 1;
+            obj.reversals(end+1) = obj.curLevel;
+            obj.reversalDirections(end+1) = newDir;
+            if obj.verbose
+                fprintf('Reversal, revCount = %0.0f, revThresh = %0.1f +/- %0.1f\n', ...
+                        obj.revCount, obj.curReversalThresh, obj.curReversalError)
+            end
+            obj.curDirection = newDir;
+            obj.didJustReverse = 1;
+        end
+    end
+end
+
+%}

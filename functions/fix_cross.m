@@ -1,5 +1,7 @@
-function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPress, black, white, ifi, current_test)
+function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, ...
+    escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, doubleScreen, AMB_EYE, EYE_TEST, ...
+    HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, ...
+    black, white, ifi, current_test)
 
 % FIX_CROSS Summary 
 % This function displays the fix cross. The same kind of step is done
@@ -28,22 +30,48 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
                     fixCross = false;
                     doubleScreen = true;
                 elseif keyCode(leftKey) || keyCode(rightKey) || keyCode(upKey) || keyCode(downKey) % each short press of the key moves the cross+frame of one pixel
-                    HC1 = moveCross(HC1, keyCode, pixelsPerPress);
-                    FF1w = moveCross(FF1w, keyCode, pixelsPerPress);
-                    FF1b = moveCross(FF1b, keyCode, pixelsPerPress);
+                    if keyCode(leftKey)
+                        direction = 'left';
+                    elseif keyCode(rightKey)
+                        direction = 'right';
+                    elseif keyCode(upKey)
+                        direction = 'up';
+                    elseif keyCode(downKey)
+                        direction = 'down';
+                    end
+                    HC1 = moveCross(HC1, direction, pixelsPerPress);
+                    FF1w = moveCross(FF1w, direction, pixelsPerPress);
+                    FF1b = moveCross(FF1b, direction, pixelsPerPress);
                 elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
                     [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
                 end
     
-                % Draw the half crosses to the screen
-                if contains(AMB_EYE, 'Left')
-                drawHalfCross(window, black, white, HC1, FF1b, FF1w, 0);
-                drawHalfCross(window, black, white, HC2, FF2b, FF2w, 1);
-                else
-                drawHalfCross(window, black, white, HC1, FF1b, FF1w, 1);
-                drawHalfCross(window, black, white, HC2, FF2b, FF2w, 0);
+               switch true
+                    case contains(EYE_TEST, 'Left')
+                        buffer_r = 0;
+                        buffer_l = 0;
+                        contrast_l = [];
+                        contrast_r = [];
+                    case contains(EYE_TEST, 'Right')
+                        buffer_r = 1;
+                        buffer_l = 1;
+                        contrast_l = [];
+                        contrast_r = [];
+                    case contains(AMB_EYE, 'Left') && contains(EYE_TEST, 'Both')
+                        buffer_r = 1;
+                        buffer_l = 0;
+                        contrast_l = 1;
+                        contrast_r = 0.6;
+                    case contains(AMB_EYE, 'Right') && contains(EYE_TEST, 'Both')
+                        buffer_r = 0;
+                        buffer_l = 1;
+                        contrast_r = 1;
+                        contrast_l = 0.6;
+                    otherwise
+                        disp('Other combination of x and y');
                 end
-
+                drawHalfCross(window, black, white, HC1, FF1w, FF1b, buffer_l, contrast_l);
+                drawHalfCross(window, black, white, HC2, FF2w, FF2b, buffer_r, contrast_r);
                 % Flip to the screen
                 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
@@ -59,8 +87,28 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
     
             % this part is "washing up" the screen, it removes the crosses from the
             % display but leaves the frame
-            washUpScreen(window, HC1, FF1b, FF1w);
-        end
+            switch true
+                case contains(EYE_TEST, 'Left')
+                    buffer_r = 0;
+                    buffer_l = 0;
+                case contains(EYE_TEST, 'Right')
+                    buffer_r = 1;
+                    buffer_l = 1;
+                case contains(AMB_EYE, 'Left') && contains(EYE_TEST, 'Both')
+                    buffer_r = 1;
+                    buffer_l = 0;
+                case contains(AMB_EYE, 'Right') && contains(EYE_TEST, 'Both')
+                    buffer_r = 0;
+                    buffer_l = 1;
+                otherwise
+                    disp('Other combination of x and y');
+            end
+                washUpScreen(window, black, white, HC1, FF1w, FF1b, buffer_l) 
+                washUpScreen(window, black, white, HC2, FF2w, FF2b, buffer_r)
+           
+            Screen('Flip', window);
+            WaitSecs(1);
+       end
     else
         while fixCross
             vbl = Screen('Flip', window);
@@ -78,7 +126,16 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
                     fixCross = false;
                     doubleScreen = true;
                 elseif keyCode(leftKey) || keyCode(rightKey) || keyCode(upKey) || keyCode(downKey) % each short press of the key moves the cross+frame of one pixel
-                    HC1 = moveCross(HC1, keyCode, pixelsPerPress);
+                    if keyCode(leftKey)
+                        direction = 'left';
+                    elseif keyCode(rightKey)
+                        direction = 'right';
+                    elseif keyCode(upKey)
+                        direction = 'up';
+                    elseif keyCode(downKey)
+                        direction = 'down';
+                    end
+                    HC1 = moveCross(HC1, direction, pixelsPerPress);
                 elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
                     [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
                 end
@@ -87,9 +144,11 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
                 if contains(AMB_EYE, 'Left')
                 drawHalfCross(window, black, white, HC1, [], [], 0);
                 drawHalfCross(window, black, white, HC2, [], [], 1);
+                Screen('Flip', window);
                 else
                 drawHalfCross(window, black, white, HC2, [], [], 1);
                 drawHalfCross(window, black, white, HC1, [], [], 0);
+                Screen('Flip', window);
                 end
     
                 % Flip to the screen
@@ -112,60 +171,62 @@ doubleScreen, AMB_EYE, HC1, HC2, FF1w, FF1b, FF2w, FF2b, HCl, HCr, pixelsPerPres
   end
 end
     
-    function cross = moveCross(cross, keyCode, pixelsPerPress)
+function cross = moveCross(cross, direction, pixelsPerPress)
     % Moves the cross based on the key press
     
-    if keyCode(37) % Left arrow key
+    if contains(direction,'left') % Left arrow key
         cross(1, :) = cross(1, :) - pixelsPerPress;
         cross(3, :) = cross(3, :) - pixelsPerPress;
-    elseif keyCode(39) % Right arrow key
+    elseif contains(direction,'right') % Right arrow key
         cross(1, :) = cross(1, :) + pixelsPerPress;
         cross(3, :) = cross(3, :) + pixelsPerPress;
-    elseif keyCode(38) % Up arrow key
+    elseif contains(direction,'up') % Up arrow key
         cross(2, :) = cross(2, :) - pixelsPerPress;
         cross(4, :) = cross(4, :) - pixelsPerPress;
-    elseif keyCode(40) % Down arrow key
+    elseif contains(direction,'down') % Down arrow key
         cross(2, :) = cross(2, :) + pixelsPerPress;
         cross(4, :) = cross(4, :) + pixelsPerPress;
     end
     
     end
-    
-    function drawHalfCross(window, black, white, HC, FFa, FFb, EYE)
-    % Draws the half cross to the screen
-    if ~nargin < 7
-    Screen('SelectStereoDrawBuffer', window, EYE);
-    end
 
-    Screen('FillRect', window, black, HC);
-    if ~isempty(FFa)
-        Screen('FillRect', window, white, FFa);
-    end
-    if ~isempty(FFb)
-        Screen('FillRect', window, black, FFb);
-    end
-       
-    Screen('Flip', window);
-    
-    end
-    
-    function washUpScreen(window, HC1, FF1b, FF1w)
-    % Washes up the screen, removing the crosses but leaving the frame
-    
-    rectColor = [1 1 1];
-    
-    Screen('SelectStereoDrawBuffer', window, 0);
-    Screen('FillRect', window, rectColor*0.5, HC1);
-    if ~isempty(FF1b)
-        Screen('FillRect', window, rectColor*0.5, FF1b);
-    end
-    if ~isempty(FF1w)
-        Screen('FillRect', window, rectColor*0.5, FF1w);
+    function drawHalfCross(window, black, white, HC, FFa, FFb, EYE, ctrst)
+        % Draws the half cross to the screen
+        if ~nargin < 7
+        Screen('SelectStereoDrawBuffer', window, EYE);
+        end
+
+        if isempty(ctrst)
+            ctrst = 1;
+        end
+
+        if ~isempty(HC)
+        Screen('FillRect', window, black+(1-ctrst), HC);
+        end
+
+        if ~isempty(FFa)
+            Screen('FillRect', window, white, FFa);
+        end
+        if ~isempty(FFb)
+            Screen('FillRect', window, black, FFb);
+        end    
     end
     
-    Screen('Flip', window);
-    WaitSecs(1);
+    function washUpScreen(window, black, white, HC, FFa, FFb, EYE)
+        % Washes up the screen, removing the crosses but leaving the frame
+        rectColor = [1 1 1];
     
-end
+        if ~nargin < 7
+        Screen('SelectStereoDrawBuffer', window, EYE);
+        end
+    
+        Screen('FillRect', window, rectColor*0.5, HC);
+        if ~isempty(FFa)
+            Screen('FillRect', window, white, FFa);
+        end
+        if ~isempty(FFb)
+            Screen('FillRect', window, black, FFb);
+        end   
+     end
 
 

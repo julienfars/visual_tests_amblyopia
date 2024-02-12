@@ -1,25 +1,32 @@
-function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMode)
+function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, global_param, fixCross, stereo)
 
     x0 = windowRect(3) / 2;
     y0 = windowRect(4) / 2;
 
-    if fixCross
-        if stereoMode == 101
-            length = x0;
-            height = y0/2;
-        elseif stereoMode == 100
-            height = x0/2;
-            length = y0;
-        else
-            height = x0;
-            length = y0;
-        end
-    else
-        length = x0;
-        height = y0;
-    end
+    h = round(windowRect(3));
+    v = round(windowRect(4));
+    DisplaySize = global_param.screen_size;
 
-    width = 20;
+    hsize = h / DisplaySize(1); %pix per mm in horizontal
+    vsize = v / DisplaySize(2); %pix per mm in vertical
+
+    PixelPerDeg = 1 / atand(1 / hsize / global_param.distance); %pixels per dva
+    size_frame = ceil(PixelPerDeg*4.45);
+    
+%careful, use the 4,4 x 4,4 dva instead of pixels (will look too lengthy and not large enough otherwise)
+        if stereo == 100
+            length = size_frame;
+            height = size_frame/2;
+        elseif stereo == 101
+            length = size_frame/2;
+            height = size_frame;
+        else
+            length = size_frame;
+            height = size_frame;
+        end
+
+
+    width = round(size_frame/27);
 
     x1 = x0 - length / 2;
     x2 = x0 - length / 4;
@@ -35,21 +42,17 @@ function [FFLw, FFRw, FFLb, FFRb] = fusion_frame(windowRect, fixCross, stereoMod
 
     Rectlarge = round((x2) - (x1)); %large size of the rectangles
 
-    if fixCross
-        if stereoMode == 101
+        if stereo == 100
             baseFusionRectH = round([0 0 Rectlarge width * 0.5]);
             baseFusionRectV = round([0 0 width Rectlarge * 0.5]);
-        elseif stereoMode == 100
+        elseif stereo == 101
             baseFusionRectH = [0 0 Rectlarge * 0.5 width];
             baseFusionRectV = [0 0 width * 0.5 Rectlarge];
         else % debug purposes
             baseFusionRectH = [0 0 Rectlarge width];
             baseFusionRectV = [0 0 width Rectlarge];
         end
-    else
-        baseFusionRectH = [0 0 Rectlarge width];
-        baseFusionRectV = [0 0 width Rectlarge];
-    end
+    
 
     [xfCA, yfCA] = RectCenter(baseFusionRectH);
     [xfCB, yfCB] = RectCenter(baseFusionRectV);
