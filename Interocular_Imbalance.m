@@ -24,7 +24,7 @@ global_param.Retest = contains(retest, 'true');% Set retest variable
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
 current_test = 'interocular_imbalance';
-
+global_param.EYE_TEST = 'Both';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test,...
     CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
@@ -158,20 +158,27 @@ propertiesMatFE = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
 eyelink_start_trial(var_eye_link, staircaseArray(iSC).trialCount, orientation_link, [])
 
 %% display the stim
-[buffer_num_AE, buffer_num_FE, angle_AE, angle_FE, angle_results_AE, angle_results_FE] = displayStimulus_binocular_imbalance(window, gabortex, xCenter, yCenter, angular_1, angular_2, propertiesMatFE, propertiesMatAE, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w);
+[buffer_num_AE, buffer_num_FE, angle_AE, angle_FE, angle_results_AE, angle_results_FE] = displayStimulus_binocular_imbalance(window, ...
+    gabortex, xCenter, yCenter, angular_1, angular_2, propertiesMatFE, propertiesMatAE, gaborDimPix, diff, FF1b, FF1w, FF2b, FF2w, ...
+    AMB_EYE, black, white);
 
 %% eyelink - start recording
 [err] = eyelink_start_recording(var_eye_link);
 
 %% set the time presentation then flip the window 
 time_presentation_function(window, gaborDimPix, xCenter, yCenter, diff, black, ...
-    white, FF1b, FF1w, FF2b, FF2w, debug, 0.2);
+    white, FF1b, FF1w, FF2b, FF2w, current_test, debug, 0.2);
 Screen('Flip', window);
    
 %% Wait for a button press
 onsetTime = GetSecs;
+if contains(EYE_TEST, 'Left')
+    angular = [angular_1 angular_2];
+else 
+    angular = [angular_2 angular_1];
+end
 [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, ...
-    downKey, escapeKey, spaceKey, skipKey,angular, staircaseArray(iSC), temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
+    downKey, escapeKey, spaceKey, skipKey,angular, staircaseArray(iSC), temps, counter_trial, [], current_test, fixCross, HC1, HC2, normal_testing);
 temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, ...
     AMB_EYE, EYE_TEST, contrastAE, contrast, iSC, propertiesMat(2)*gaborDimPix, angle_results_AE, angle_results_FE, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')

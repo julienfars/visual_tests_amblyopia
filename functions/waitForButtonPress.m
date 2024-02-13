@@ -1,5 +1,6 @@
-function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
-    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2)
+function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, ...
+    downKey, escapeKey, spaceKey, skipKey,...
+    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2, normal_testing)
     
     timeSecs = KbWait;
     % Wait for a button press
@@ -26,7 +27,7 @@ function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(ons
             % change it here, change the contains to choose from each
             % current test + add the temps in the choices
         elseif contains(current_test, 'interocular_imbalance')
-            [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angle_results_FE, normal_testing, sc);
+            [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, normal_testing, sc);
         elseif contains(current_test, 'dichoptic')
             [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc);
         else
@@ -62,17 +63,17 @@ function [value, sc] = handleNonTestConditions(keyCode, leftKey, rightKey, upKey
     end
 end
 
-function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angle_results_FE, normal_testing, sc)
+function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, normal_testing, sc)
     value = 'WRONG_RESPONSE';
     
     if keyCode == escapeKey
         value = 'ESCAPE';
-    elseif keyCode == rightKey && angle_results_FE == 352.9
+    elseif keyCode == rightKey && angular(2) == 352.9
         handleInterocularImbalanceResponse(~contains(normal_testing, 'yes'), sc);
-    elseif keyCode == leftKey && angle_results_FE == 7.1
+    elseif keyCode == leftKey && angular(1) == 7.1
         handleInterocularImbalanceResponse(contains(normal_testing, 'yes'), sc);
     else
-        handleInterocularImbalanceResponse(contains(normal_testing, 'yes'), sc);
+        handleInterocularImbalanceResponse(1, sc);
     end
 end
 
