@@ -1,6 +1,6 @@
 # Visual Experiment Repository
 
-![Experiment Image](visual_test_battery/data/icon/eye_icon.png)
+![Experiment Image](data/icon/eye_icon.png)
 
 ## Overview
 
