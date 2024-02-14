@@ -1,4 +1,4 @@
-# Visual Experiment Repository
+# Amblyopia Plasticity Study - Battery of Tests 
 
 ![Experiment Image](data/icon/eye_icon.png)
 
