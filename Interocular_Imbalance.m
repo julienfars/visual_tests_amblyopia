@@ -186,7 +186,7 @@ end
 
 [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, 0, current_test, counter_mrt, contrastAE, contrast, iSC, normal_testing);
 [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt, iSC, FREQS_test);
-plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, freq, current_test, contrastAE, contrast);
+plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, freq, current_test, contrastAE, contrast, normal_testing);
 
 %% Stop the eyelink recording 
 eyelink_stop_recording_and_write_variables(var_eye_link,staircaseArray(iSC).trialCount, orientation_link, [])
