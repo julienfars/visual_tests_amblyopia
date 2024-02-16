@@ -171,6 +171,7 @@ onsetTime = GetSecs;
 temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, EYE_TEST, AMB_EYE, contrast, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
     break;
+    mean_reversals = 0;
 end
 if staircaseArray(iSC).isFinished
     [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);

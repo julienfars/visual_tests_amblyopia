@@ -73,10 +73,10 @@ function filename = getFilename(CurrTest, baseName)
     %   baseName: Base name of the file
     filepath=fileparts(which('eyelink_calibration.m'));
 
-    if exist(CurrTest, 'var')
-        filename = [filepath '/' 'targets' '/' baseName 'BW.jpg'];
+    if contains(CurrTest, 'asteroid')
+        filename = [filepath '/' 'targets' '/' baseName 'BW.png'];
     else
-        filename = [filepath '/' 'targets' '/' baseName '.jpg'];
+        filename = [filepath '/' 'targets' '/' baseName '.png'];
     end
 end
 

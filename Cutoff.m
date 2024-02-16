@@ -39,7 +39,7 @@ stereo = 100; % is supposed to be 100 when using display++
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
-[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereo, current_test, width, height);
 
 %% Other parameters
 % Call the function to set up other parameters
@@ -133,7 +133,8 @@ onsetTime = GetSecs;
     angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
 temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, EYE_TEST, AMB_EYE, contrast, propertiesMat(2), orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
-        break;
+    mean_reversals = 0;
+    break;
 end
 
 %% Record/display the results
