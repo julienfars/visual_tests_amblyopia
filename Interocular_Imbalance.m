@@ -28,8 +28,7 @@ global_param.EYE_TEST = 'Both';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test,...
     CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
-normal_testing = 0; %set to 1 to test people with regular vision, keep at 0 for amblyopes
-global_param.binoc_normal_testing = normal_testing;
+normal_testing = global_param.binoc_normal_testing; %set to 1 to test people with regular vision, keep at 0 for amblyopes
 num_freqs = numel(FREQS_test); 
 
 %% launch eyelink parameters
@@ -180,12 +179,12 @@ end
 [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, ...
     downKey, escapeKey, spaceKey, skipKey,angular, staircaseArray(iSC), temps, counter_trial, [], current_test, fixCross, HC1, HC2, normal_testing);
 temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, ...
-    AMB_EYE, EYE_TEST, contrastAE, contrast, iSC, propertiesMat(2)*gaborDimPix, angle_results_AE, angle_results_FE, Stim_position, key, value, rt};
+    AMB_EYE, EYE_TEST, contrastAE, contrast, iSC, propertiesMatAE(2)*gaborDimPix, angle_results_AE, angle_results_FE, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
     break;
 end
 
-[mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, contrastAE, contrast, iSC);
+[mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, 0, current_test, counter_mrt, contrastAE, contrast, iSC, normal_testing);
 [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt, iSC, FREQS_test);
 plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, freq, current_test, contrastAE, contrast);
 

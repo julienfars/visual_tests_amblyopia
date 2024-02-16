@@ -65,15 +65,44 @@ end
 
 function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, normal_testing, sc)
     value = 'WRONG_RESPONSE';
-    
-    if keyCode == escapeKey
-        value = 'ESCAPE';
-    elseif keyCode == rightKey && angular(2) == 352.9
-        handleInterocularImbalanceResponse(~contains(normal_testing, 'yes'), sc);
-    elseif keyCode == leftKey && angular(1) == 7.1
-        handleInterocularImbalanceResponse(contains(normal_testing, 'yes'), sc);
-    else
-        handleInterocularImbalanceResponse(1, sc);
+    if ~normal_testing
+       switch keyCode
+        case escapeKey
+            value = 'ESCAPE';
+        case rightKey
+            if angular(2) == 352.9
+                handleInterocularImbalanceResponse(1, sc);
+            else
+                handleInterocularImbalanceResponse(0, sc);
+            end
+        case leftKey
+            if angular(1) == 7.1
+                handleInterocularImbalanceResponse(1, sc);
+            else
+                handleInterocularImbalanceResponse(0, sc);
+            end
+        otherwise
+            handleInterocularImbalanceResponse(0, sc);
+       end
+    elseif normal_testing
+       switch keyCode
+        case escapeKey
+            value = 'ESCAPE';
+        case rightKey
+            if angular(2) == 352.9
+                handleInterocularImbalanceResponse(1, sc);
+            else
+                handleInterocularImbalanceResponse(0, sc);
+            end
+        case leftKey
+            if angular(1) == 7.1
+                handleInterocularImbalanceResponse(1, sc);
+            else
+                handleInterocularImbalanceResponse(0, sc);
+            end
+        otherwise
+            handleInterocularImbalanceResponse(0, sc);
+        end
     end
 end
 
@@ -117,11 +146,11 @@ function [value, sc] = handleOtherTestConditions(keyCode, leftKey, rightKey, upK
     end
 end
 
-function handleInterocularImbalanceResponse(normalTesting, sc)
-    if normalTesting
-        sc.doResp(0);
-    else
+function handleInterocularImbalanceResponse(success, sc)
+    if success
         sc.doResp(1);
+    else
+        sc.doResp(0);
     end
 end
 

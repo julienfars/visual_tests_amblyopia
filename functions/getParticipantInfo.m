@@ -68,11 +68,11 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
         
     elseif contains(current_test, 'interocular_imbalance')
         CUTOFF = [];
-        prompt_additional = {'Frequencies list (change it if needed, must be [0:1])', 'normal observer? [yes/no]'};
-        defaults_additional = {'0.5 1 2 4', 'no'};
+        prompt_additional = {'Frequencies list (change it if needed, must be [0:1])', 'normal observer? [yes=1/no=0]'};
+        defaults_additional = {'0.5 1 2 4', '0'};
         answer_additional = inputdlg(prompt_additional, 'Additional Parameters', 2, defaults_additional); % Opens dialog window
         FREQS_test = str2num(answer_additional{1, :});
-        global_param.binoc_normal_testing = answer_additional{2, :};
+        global_param.binoc_normal_testing = str2num(answer_additional{2, :});
 
     elseif contains(current_test, 'dichoptic')
         prompt_additional = {'Noise Contrast [0:1]', 'Contrast Gabor [0:1]', 'Cut-off frequency'};
