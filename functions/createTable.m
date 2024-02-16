@@ -2,7 +2,7 @@ function temps = createTable(maxNumTrials, nb_table, varTypes, varNames)
     % Create a table based on the specified parameters
     
     % Default variable names
-    defaultVarNames = ["Task", "Date_time", "Trial", "Reversal", "AMB_eye", "Eye_tested", "Contrast", "Frequency_dva", ...
+    defaultVarNames = ["Task", "Date_time", "Trial", "Reversal", "AMB_eye", "Eye_tested", "Contrast", "Frequency_cpp", ...
                        "Orientation", "Position", "Key", "Success", "RT"];
 
     % Use default variable types if not provided

@@ -24,8 +24,6 @@ function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(ons
         % Handle different test conditions
         if ~contains(current_test, {'interocular_imbalance', 'snellen', 'snellen_crowded', 'dichoptic'})
             [value, sc] = handleNonTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc);
-            % change it here, change the contains to choose from each
-            % current test + add the temps in the choices
         elseif contains(current_test, 'interocular_imbalance')
             [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, normal_testing, sc);
         elseif contains(current_test, 'dichoptic')
@@ -50,8 +48,6 @@ end
 
 % Define helper functions for each test condition
 function [value, sc] = handleNonTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc)
-    value = 'WRONG_RESPONSE';
-    
     if keyCode == escapeKey
         value = 'ESCAPE';
     elseif (keyCode == rightKey && angular == 315) || (keyCode == leftKey && angular == 45)

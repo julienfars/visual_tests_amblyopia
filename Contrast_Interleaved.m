@@ -1,10 +1,8 @@
 % potential changes to make it more functional 
 %{
 - add training trials 
-- add a CSf figure 
+- add a CSf figure in polt results function 
 %}
-
-
 %% Setup
 sca;
 commandwindow;
@@ -174,7 +172,11 @@ temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).tri
 if contains(value, 'ESCAPE')
     break;
 end
-[mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);
+if staircaseArray(iSC).isFinished
+    [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);
+else 
+    mean_reversals = 0;
+end
 [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt);
 plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, contrast, current_test, [], []);
 

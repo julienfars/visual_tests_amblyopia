@@ -4,7 +4,8 @@ function [filename, global_param] = results_table(baseFileName, global_param, EY
 
     % Generate the full file path
     folder = 'data';
-    filename = fullfile(folder, getUniqueFileName(baseFileName));
+    extension = '.xls';
+    filename = fullfile(folder, getUniqueFileName(baseFileName)+extension);
 
     % Update global parameters based on test type
     updateGlobalParams(global_param, baseFileName, mean_reversals, EYE_TEST, AMB_EYE);

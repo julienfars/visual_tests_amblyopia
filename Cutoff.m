@@ -1,7 +1,3 @@
-%% Variables
-
-
-
 %% Setup
 sca; % to clean the workspace
 commandwindow; % to open the command window
@@ -143,7 +139,7 @@ end
 %% Record/display the results
 [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), [], []);
 if sc.isFinished
-[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, [], []);
+[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, [], [], []);
 else 
    mean_reversals = 0;
 end
