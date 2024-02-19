@@ -137,7 +137,7 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
                     end
                     HC1 = moveCross(HC1, direction, pixelsPerPress);
                 elseif keyCode(spaceKey) % if the spacekey is pressed, then the cross+frame go back to the center of the display
-                    [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
+                    [HC1, HC2] = determineMovingSide(AMB_EYE, HCl, HCr);
                 end
     
                 % Draw the half crosses to the screen

@@ -1,6 +1,16 @@
-%% Setup
-% first we setup the screen, the workspace and the command window
 
+%%% FIX THE MOVING TARGETS!!!
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+
+%% Setup
 sca; % to clean the workspace
 commandwindow; % to open the command window
 filepath=fileparts(which('Dichoptic.m')); %determine what is the filepath of the script 
