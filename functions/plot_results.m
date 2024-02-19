@@ -7,7 +7,7 @@ function plot_results(staircase_ended, table, mean, numstaircase)
 
     if table{1, 3} >= 1
         if ~isempty(numstaircase)
-            idx = any(table{:, 1} == numstaircase, 2);
+            idx = any(table{:, 'Staircase'} == numstaircase, 2);
             data = table(idx, 8);
         else
             data = table(:, 8);

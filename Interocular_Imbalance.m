@@ -181,11 +181,16 @@ end
 temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, ...
     AMB_EYE, EYE_TEST, contrastAE, contrast, iSC, propertiesMatAE(2)*gaborDimPix, angle_results_AE, angle_results_FE, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
+    mean_reversals = 0;
     break;
 end
 
 [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, 0, current_test, counter_mrt, contrastAE, contrast, iSC, normal_testing);
+if staircaseArray(iSC).isFinished
 [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt, iSC, FREQS_test);
+else 
+   mean_reversals = 0;
+end
 plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, freq, current_test, contrastAE, contrast, normal_testing);
 
 %% Stop the eyelink recording 
