@@ -27,7 +27,7 @@ function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(ons
         elseif contains(current_test, 'interocular_imbalance')
             [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, normal_testing, sc);
         elseif contains(current_test, 'dichoptic')
-            [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc);
+            [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, orientation, normal_testing, sc, angular);
         else
             [value, sc] = handleOtherTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, orientation, sc);
         end
@@ -67,18 +67,18 @@ function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, ri
             value = 'ESCAPE';
         case rightKey
             if angular(2) == 352.9
-                handleInterocularImbalanceResponse(1, sc);
+                value = handleInterocularImbalanceResponse(1, sc);
             else
-                handleInterocularImbalanceResponse(0, sc);
+                value = handleInterocularImbalanceResponse(0, sc);
             end
         case leftKey
             if angular(1) == 7.1
-                handleInterocularImbalanceResponse(1, sc);
+                value = handleInterocularImbalanceResponse(1, sc);
             else
-                handleInterocularImbalanceResponse(0, sc);
+                value = handleInterocularImbalanceResponse(0, sc);
             end
         otherwise
-            handleInterocularImbalanceResponse(0, sc);
+            value = handleInterocularImbalanceResponse(0, sc);
        end
     elseif normal_testing
        switch keyCode
@@ -86,35 +86,34 @@ function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, ri
             value = 'ESCAPE';
         case rightKey
             if angular(2) == 352.9
-                handleInterocularImbalanceResponse(1, sc);
+                value = handleInterocularImbalanceResponse(1, sc);
             else
-                handleInterocularImbalanceResponse(0, sc);
+                value = handleInterocularImbalanceResponse(0, sc);
             end
         case leftKey
             if angular(1) == 7.1
-                handleInterocularImbalanceResponse(1, sc);
+                value = handleInterocularImbalanceResponse(1, sc);
             else
-                handleInterocularImbalanceResponse(0, sc);
+                value = handleInterocularImbalanceResponse(0, sc);
             end
         otherwise
-            handleInterocularImbalanceResponse(0, sc);
+            value = handleInterocularImbalanceResponse(0, sc);
         end
     end
 end
 
-function [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc)
-    value = 'WRONG_RESPONSE';
-    
+function [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc, repeatNoise)
+    value = 'WRONG_RESPONSE';   
     if keyCode == escapeKey
         value = 'ESCAPE';
     elseif keyCode == upKey && contains(acc_resp, 'top')
-        handleDichopticResponse(sc, 1);
+        handleDichopticResponse(sc, 1, repeatNoise);
         value = 'TRUE';
     elseif keyCode == downKey && contains(acc_resp, 'bottom')
-        handleDichopticResponse(sc, 1);
+        handleDichopticResponse(sc, 1, repeatNoise);
         value = 'TRUE';
     else
-        handleDichopticResponse(sc, 0);
+        handleDichopticResponse(sc, 0, repeatNoise);
         value = 'FALSE';
     end
 end
@@ -142,15 +141,17 @@ function [value, sc] = handleOtherTestConditions(keyCode, leftKey, rightKey, upK
     end
 end
 
-function handleInterocularImbalanceResponse(success, sc)
+function value = handleInterocularImbalanceResponse(success, sc)
     if success
+        value = 'TRUE';
         sc.doResp(1);
     else
+        value = 'FALSE';
         sc.doResp(0);
     end
 end
 
-function handleDichopticResponse(sc, response)
+function handleDichopticResponse(sc, response, repeatNoise)
     if ~repeatNoise
         sc.doResp(response);
     else

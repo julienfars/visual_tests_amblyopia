@@ -75,12 +75,16 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
         global_param.binoc_normal_testing = str2num(answer_additional{2, :});
 
     elseif contains(current_test, 'dichoptic')
+        if isempty(global_param.contrast_AE)
+            contrast_gabor = '0.5';
+        else
+            contrast_gabor = num2str(global_param.contrast_AE(3));
+        end
         prompt_additional = {'Noise Contrast [0:1]', 'Contrast Gabor [0:1]', 'Cut-off frequency'};
-        defaults_additional = {global_param.dichop, global_param.contrast_AE(3), '-'};
+        defaults_additional = {global_param.dichop, contrast_gabor, '-'};
         answer_additional = inputdlg(prompt_additional, 'Additional Parameters', 2, defaults_additional); % Opens dialog window
-        NOISE = str2num(answer_additional{1, :});
+        NOISE = str2num(answer_additional{1, :}); % starting noise
         CONTRAST = str2double(answer_additional{2, :});
-
         % Conditionally set CUTOFF based on the eye and amblyopic status
         CUTOFF = answer_additional{3, :};
         if contains(CUTOFF, '-')

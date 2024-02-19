@@ -30,7 +30,7 @@ function newnoise = bandpass_noise_maker(noisesize, fc, fontsize)
     agf = abs(gf);
 
     % Create a band-pass filter
-    f = create_band_pass_filter(agf, fc, noisesize, fontsize);
+    f = create_band_pass_filter(agf, fc, noisesize, fontsize, z);
 
     % Apply the filter to white noise
     fgf = f .* wnf;
@@ -44,7 +44,7 @@ function newnoise = bandpass_noise_maker(noisesize, fc, fontsize)
     newnoise = (aigf - meanlum) * 5;
 end
 
-function f = create_band_pass_filter(agf, fc, noisesize, fontsize)
+function f = create_band_pass_filter(agf, fc, noisesize, fontsize, z)
     bw = 1;
     fl = 10^(log10(fc) - log10(2 * bw) / 2);
     fh = 10^(log10(fc) + log10(2 * bw) / 2);

@@ -1,6 +1,6 @@
-function time_presentation_function(window, gaborDimPix, ...
+function time_presentation_function(windowRect, window, gaborDimPix, ...
 xCenter, yCenter, diff, black, white, FF1b, FF1w, FF2b, ...
-FF2w, current_test, debug, time)
+FF2w, current_test, debug, time, AMB_EYE, bgcontrast)
     % This function represents the time presentation logic for a stereo Gabor stimulus.
 
     if contains(current_test, 'interocular_imbalance')
@@ -43,7 +43,7 @@ FF2w, current_test, debug, time)
     if contains(AMB_EYE, 'Left') 
     Screen('SelectStereoDrawBuffer',window,0);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
+    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], centeredRect);
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_center1);
@@ -53,7 +53,7 @@ FF2w, current_test, debug, time)
     Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_center1);
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], dstGab_centerN);
+    Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast], centeredRect);
     end
     Screen('DrawingFinished', window);
     end

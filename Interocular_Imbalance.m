@@ -30,6 +30,9 @@ global_param.EYE_TEST = 'Both';
     CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
 normal_testing = global_param.binoc_normal_testing; %set to 1 to test people with regular vision, keep at 0 for amblyopes
 num_freqs = numel(FREQS_test); 
+global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
+global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
+global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the global_param structure 
 
 %% launch eyelink parameters
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
@@ -212,7 +215,8 @@ baseFileName = SUBJECT + "_" + char(datetime('now','TimeZone','local','Format','
 writetable(temps,filename)
 fprintf('Output saved in: %s\n', filename)
 
-%% ending the script 
+%% ending the script
+global_param.EYE_TEST = '?'; % records the participant's tested eye in the global_param structure 
 if ~isempty(diff)
     global_param.pix_shift = diff(1:2,1);
 end

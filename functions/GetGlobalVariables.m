@@ -42,7 +42,7 @@ global_param.binoc_normal_testing = false;
 %% parameters from the Dichoptic test
 % all those values are important for the VR training
 global_param.dichop = '0.1';
-global_param.dichop_contrast_high = [];
+global_param.dichop_contrast_high = 0.8;
 global_param.dichop_contrast_low = [];
 
 %% parameters from the Asteroid test 

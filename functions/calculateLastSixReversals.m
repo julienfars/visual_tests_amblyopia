@@ -34,7 +34,7 @@ function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_trai
             mrt(sc.revCount, :) = {sc.revCount, value, iSC}; % Recorded in a table titled mrt
 
         case 'dichoptic'
-            recordReversal = recordReversal && (sc.trialCount > 1) && (temps{sc.trialCount, 2} ~= temps{sc.trialCount-1, 2});
+            recordReversal = recordReversal && (sc.trialCount > 1) && (temps{sc.trialCount,{'Reversal'}} ~= temps{sc.trialCount-1,{'Reversal'}});
             mrt(sc.revCount, :) = {sc.revCount, var1}; % Recorded in a table titled mrt
 
         case 'snellen'

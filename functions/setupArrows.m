@@ -1,8 +1,8 @@
-function [UP_side, DOWN_side, isConvex] = setupArrows(xCenter, yCenter, size)
+function [UP_side, DOWN_side, isConvex, xPosVectorUP, yPosVectorUP, xPosVectorDOWN, yPosVectorDOWN] = setupArrows(xCenter, yCenter, size)
     % Set up arrow positions.
 
     % Get the size of the noise
-    sidesize = side; % was 240, was 390
+    sidesize = size; % was 390
     dstGab_centerN = [0 0 1 0.5] .* sidesize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
 

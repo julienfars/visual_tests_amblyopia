@@ -1,11 +1,11 @@
-function [ARROWLT, ARROWRT, ARROWLB, ARROWRB, penWidthPixels] = setupPrimerCoordinates(HC1)
+function [ARROWLT, ARROWRT, ARROWLB, ARROWRB, penWidthPixels] = setupPrimerCoordinates(HC1, HC2)
     % Set up primer arrow coordinates.
 
     % Extract corner coordinates
     LeftTopCorner = HC1(1:2, 3);
     RightTopCorner = HC1(1:2, 4);
     LeftBottomCorner = HC1(1:2, 5);
-    RightBottomCorner = HC1(1:2, 6);
+    RightBottomCorner = HC2(1:2, 5);
 
     % Calculate arrow coordinates
     ARROWLT_1 = [LeftTopCorner(1); LeftTopCorner(2); LeftTopCorner(1)+20; LeftTopCorner(2)+5];

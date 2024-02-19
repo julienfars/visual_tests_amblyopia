@@ -23,7 +23,6 @@ current_test = 'cutoff';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, ...
     CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
-
 global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
 global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
 global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the global_param structure 
@@ -95,7 +94,7 @@ mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
 doubleScreen = false;      % this value will determine when to show the half cross (when set to 'true')
 counter_trial = 0;
-%fixCross = 1; % put to one to display fixation cross (keep at zero unless debugging)
+num_training = 5; % Number of training trials
 
 while ~sc.isFinished           % keep looping until staircase concludes
   
@@ -108,7 +107,6 @@ while ~sc.isFinished           % keep looping until staircase concludes
 [angular, orientation] = randomizeOrientation();
 
 % Call the function for training trials
-num_training = 5; % Number of training trials
 propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix, aspectRatio, phase, contrast);
 
  %% Eyelink Start trial
@@ -177,5 +175,4 @@ if ~isempty(diff)
     global_param.pix_shift = diff(1:2,1);
 end
 save('data/Global_parameters/global_param.mat','global_param'); % save the changes for the next tests 
-
 % end of the script 

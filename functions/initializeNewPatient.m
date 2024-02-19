@@ -9,6 +9,7 @@ function global_param = initializeNewPatient(New_patient)
         if isfile("data/Global_parameters/global_param.mat")
             load("data/Global_parameters/global_param.mat");
         else
+            disp('data/Global_parameters/global_param.mat is missing, new parameters were set up using GetGlobalVariables()');
             global_param = GetGlobalVariables();
         end
     end

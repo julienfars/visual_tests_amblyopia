@@ -33,7 +33,9 @@ current_test = 'contrast_interleaved';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test...
     , CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
-
+global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
+global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
+global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the global_param structure 
 %% launch eyelink parameters
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
 
