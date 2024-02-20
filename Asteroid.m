@@ -19,7 +19,7 @@ global_param.Retest = contains(retest, 'true');% Set retest variable
 %% Participant Information 
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
-current_test = 'snellen_crowded';
+current_test = 'asteroid';
 global_param.EYE_TEST = 'Both';
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, ...
@@ -116,7 +116,7 @@ while ~passedblindnesstest
 
 
 %% Eyelink Start trial
-eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
+eyelink_start_trial(var_eye_link, ntrials, TARGET_Position, [])
 
 %% eyelink - start recording
 [err] = eyelink_start_recording(var_eye_link);
@@ -130,7 +130,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
          % 90ms expired
          nlp_timer_1 = GetSecs;    % reset timer
                   
-         [dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = SQUARE_LOOP(expt, log_disparity, stereocue);
+         [dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = square_loop_asteroid(expt, log_disparity, stereocue);
 
       end % nlp getsec loop
       
@@ -326,7 +326,7 @@ maxDiameter = 24;
       correct=0;%ERROR
    end
 
-        eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
+        eyelink_stop_recording_and_write_variables(var_eye_link,ntrials, TARGET_Position, [])
          
    if passedblindnesstest==0
       if correct==1
@@ -422,7 +422,7 @@ if passedblindnesstest==1
 
 
  %% Eyelink Start trial
-eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
+eyelink_start_trial(var_eye_link, trials, TARGET_Position, [])
 
 
  %% eyelink - start recording
@@ -717,7 +717,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
          correct=0;%ERROR
       end
 
-        eyelink_stop_recording_and_write_variables(var_eye_link,sc.trialCount, orientation, [])
+        eyelink_stop_recording_and_write_variables(var_eye_link,trials, TARGET_Position, [])
 
 
 %% data file 
