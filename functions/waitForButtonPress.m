@@ -36,7 +36,7 @@ function [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(ons
         
         if fixCross
             % get the x-y shift from the center into the variable Stim_position 
-            Stim_position = HC1(1:2,3) - HC2(1:2,3);
+            Stim_position = HC1(1:2,4) - HC2(1:2,3);
             Stim_position = Stim_position'; % transpose 
             Stim_position = num2str(Stim_position);
         else 

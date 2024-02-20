@@ -1,5 +1,3 @@
-%% Variables 
-
 %% Setup
 sca;
 commandwindow;
@@ -10,17 +8,26 @@ KbName('UnifyKeyNames'); %set up the keyboard for answers
 %% initialisation of eyelink
 [dummymode, var_eye_link] = eyelink_init(1);
 
-%% retrieve data from previous test 
-New_patient = []; % set to empty as the battery of tests should not start by this test
-global_param = initializeNewPatient(New_patient);
+%% Same patient? Retest? 
+% This battery of test will be performed thrice on the same session (FE, AE and BE)
+% And thrice for each participant (training, test and retest)
+New_patient = getNewPatientInfo(); % popup window that control if this is a new participant 
+global_param = initializeNewPatient(New_patient); % if new patient is true then the parameters are initialised. If not, we retrieve the previous parameters 
+retest = getRetestInfo(global_param); % popup window that control if this is a retest or not
+global_param.Retest = contains(retest, 'true');% Set retest variable
 
 %% Participant Information 
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
-current_test = 'asteroid';
+current_test = 'snellen_crowded';
+global_param.EYE_TEST = 'Both';
 % Call the function to get participant information
-[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross] = getParticipantInfo(global_param);
-
+[SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, ...
+    CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
+global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
+global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
+global_param.EYE_TEST = EYE_TEST; % records the participant's tested eye in the global_param structure 
+   
 %% launch eyelink parameters
 [ELsoftwareVersion,ver, versionstring, r1, vnumcell] = eyelink_param(var_eye_link, edfFile, dummymode);
 
@@ -34,7 +41,7 @@ DEBUG = 0; %runs real test when at 0
 [expt] = asteroid_param(SUBJECT,AMB_EYE, EYE_TEST);
 [window, windowRect, expt, blueRectLeftOn, blueRectLeftOff, ...
     blueRectRightOn, blueRectRightOff, width, height, white, ...
-    black, oldSyncLevel, screenNumber, stereomode, SIZE_X, SIZE_Y] = setupScreen_asteroid(fixCross, expt);
+    black, screenNumber, stereoMode, SIZE_X, SIZE_Y] = setupScreen_asteroid(fixCross, expt);
 
 %% Other Parameters
 [keycode, LEFT, RIGHT, DOWN, UP, SPACE, exit, top_leftKey, top_rightKey, bottom_leftKey, bottom_rightKey] = setupOtherParameters_asteroid();

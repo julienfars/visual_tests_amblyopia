@@ -1,6 +1,6 @@
 function [window, windowRect, expt, blueRectLeftOn, blueRectLeftOff, ...
     blueRectRightOn, blueRectRightOff, width, height, white, ...
-    black, oldSyncLevel, screenNumber, stereomode, SIZE_X, SIZE_Y]  = setupScreen_asteroid(fixCross, expt)
+    black, screenNumber, stereoMode, SIZE_X, SIZE_Y]  = setupScreen_asteroid(fixCross, expt)
     % This function initializes the experiment parameters and creates the
     % Psychtoolbox window.
 

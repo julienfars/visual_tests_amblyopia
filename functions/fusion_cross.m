@@ -1,52 +1,53 @@
 function [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereo)
 
-    h = round(windowRect(3));
-    v = round(windowRect(4));
-
-    DisplaySize = global_param.screen_size;
-
-    centerV = v / 2;
-    centerHsti = h / 2;
-
-    hsize = h / DisplaySize(1); %pix per mm in horizontal
-    vsize = v / DisplaySize(2); %pix per mm in vertical
-
-    PixelPerDeg = 1 / atand(1 / hsize / global_param.distance); %pixels per dva
-    hpixel = (1 / PixelPerDeg) * 60;
-    vpixel = (1 / PixelPerDeg) * 60;
-
-        if stereo == 100
-            fixGapV = round(10 / vpixel / 2);
-            fixGapH = round(10 / vpixel);
-        elseif stereo == 101
-            fixGapV = round(10 / vpixel);
-            fixGapH = round(10 / vpixel / 2);
-        else 
-            fixGapV = round(10 / vpixel);
-            fixGapH = round(10 / vpixel);
-        end
-
-
-    a = round(25 / vpixel); % thickness in pixels was 6
-    b = round(100 / hpixel); % length in pixels was 40
-
-        if stereo == 100
-        baseRectH = round([0 0 b a * 0.5]);
-        baseRectV = round([0 0 a b * 0.5]);
-        baseSquare = round([0 0 b - a (b - a) * 0.5]);
-        elseif stereo == 101
-        baseRectH = round([0 0 b * 0.5 a]);
-        baseRectV = round([0 0 a* 0.5 b]);
-        baseSquare = round([0 0 (b - a) * 0.5 (b - a)]);
-        else
-        baseRectH = [0 0 b a];
-        baseRectV = [0 0 a b];
-        baseSquare = [0 0 b - a b - a];
-        end
+    if fixCross
+        h = round(windowRect(3));
+        v = round(windowRect(4));
     
-
-    [HCl, HCr, pixelsPerPress] = createHalfCrosses(windowRect, centerHsti, centerV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare);
-
+        DisplaySize = global_param.screen_size;
+    
+        centerV = v / 2;
+        centerHsti = h / 2;
+    
+        hsize = h / DisplaySize(1); %pix per mm in horizontal
+        vsize = v / DisplaySize(2); %pix per mm in vertical
+    
+        PixelPerDeg = 1 / atand(1 / hsize / global_param.distance); %pixels per dva
+        hpixel = (1 / PixelPerDeg) * 60;
+        vpixel = (1 / PixelPerDeg) * 60;
+    
+            if stereo == 100
+                fixGapV = round(10 / vpixel / 2);
+                fixGapH = round(10 / vpixel);
+            elseif stereo == 101
+                fixGapV = round(10 / vpixel);
+                fixGapH = round(10 / vpixel / 2);
+            else 
+                fixGapV = round(10 / vpixel);
+                fixGapH = round(10 / vpixel);
+            end
+    
+    
+        a = round(25 / vpixel); % thickness in pixels was 6
+        b = round(100 / hpixel); % length in pixels was 40
+    
+            if stereo == 100
+            baseRectH = round([0 0 b a * 0.5]);
+            baseRectV = round([0 0 a b * 0.5]);
+            baseSquare = round([0 0 b - a (b - a) * 0.5]);
+            elseif stereo == 101
+            baseRectH = round([0 0 b * 0.5 a]);
+            baseRectV = round([0 0 a* 0.5 b]);
+            baseSquare = round([0 0 (b - a) * 0.5 (b - a)]);
+            else
+            baseRectH = [0 0 b a];
+            baseRectV = [0 0 a b];
+            baseSquare = [0 0 b - a b - a];
+            end
+        [HCl, HCr, pixelsPerPress] = createHalfCrosses(windowRect, centerHsti, centerV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare);
+    else
+        [HCl, HCr, pixelsPerPress] = deal([], [], []);
+    end
 end
 
 function [HCl, HCr, pixelsPerPress] = createHalfCrosses(windowRect, centerHsti, centerV, fixGapH, fixGapV, baseRectH, baseRectV, baseSquare)

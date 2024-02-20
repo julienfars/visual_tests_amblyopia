@@ -43,15 +43,15 @@ Screen('TextSize', window, 36);
 [HCl, HCr, pixelsPerPress] = fusion_cross(windowRect, global_param, fixCross, stereo); % fusion cross function, only used when stereomode. The resulting variables are the Half Crosses(HC) for each eye (r and l)
 
 %% Size of optotypes  
-   [E_min_size_dva, global_param] = calculateOptotypeSize(windowRect, global_param, DISTANCE, fixCross);
+[E_min_size_dva, global_param] = calculateOptotypeSize(windowRect, global_param, DISTANCE, fixCross);
     
 %% Staircase parameters
 ifi = Screen('GetFlipInterval', window);
 
 % these parameters control the staircase 
-StimLevels      = max_opto_size:-1:2;    % stimulus levels - here a decreasing list in pixels
+StimLevels      = global_param.max_opto_size:-2:2;    % stimulus levels - here a decreasing list in pixels
 initStepSize    = -10;        % staircase step size before first reversal
-stepSize        = -4;         % staircase step size after first reversal - has more reversals (see staircase code)
+stepSize        = -8;         % staircase step size after first reversal - has more reversals (see staircase code)
 nRightToDescend = 3;          % number of "correct" responses before descending
 nWrongToAscend  = 1;          % number of "incorrect" responses before ascending
 maxNumTrials    = 30;         % maximum number of trials for staircase
@@ -68,7 +68,7 @@ sc = staircase(StimLevels, initStepSize, stepSize,         ...
 nb_table = 1;
 temps = createTable(maxNumTrials, 1,["string", "datetime", "double", "double", "string", "string", ...
                     "double", "double", "string", "string", "string", "double"], ["Task", "Date_time",...
-                    "Trial", "Reversal", "AMB_eye", "Eye_tested", "logMar", ...
+                    "Trial", "Reversal", "AMB_eye", "Eye_tested", "opto_size_pixel", ...
                        "Orientation", "Position", "Key", "Success", "RT"]);
 
 %% creating the mean reversals table (for the calculation of the mean/threshold)
@@ -84,23 +84,28 @@ mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
     counter_mrt = 0;
 while ~sc.isFinished           % keep looping until staircase concludes  
     [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
-doubleScreen, AMB_EYE,HC1,HC2, [], [], [], [], HCl, HCr, [], [], [], [], pixelsPerPress, black, white, ifi, current_test);
+doubleScreen, AMB_EYE, EYE_TEST,HC1,HC2, [], [], [], [], HCl, HCr, [], [], [], [], pixelsPerPress, black, white, ifi, current_test);
     [orientation, E_shape] = randomizeOrientation_snellen();
     E_texture = Screen('MakeTexture', window, E_shape);
     StimLevel = sc.curLevel;          % testing level from staircase
     opto_size = StimLevel;
 
 %% display the stim
-    drawSnellenStimulus(window, doubleScreen, E_texture, xCenter, yCenter, opto_size, diff);
-    % Flip to the screen
+    [dstGab_center1, dstGab_center2] = drawSnellenStimulus(window, E_texture, xCenter, yCenter, opto_size, diff, stereo, EYE_TEST, AMB_EYE, E_shape);
     beep; % we use a sound to avert the participants that the stim is showed (might be very useful when amblyopic eye is used)
     Screen('Flip', window);
     onsetTime = GetSecs; % Wait for a button press
 
 %% wait the button press
-
-    [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
-    [], sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
+ if contains(AMB_EYE, 'Left')
+      HCa = HC1;
+      HCb = HC2;
+  else
+      HCb = HC1;
+      HCa = HC2;
+  end
+    [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, 'false', leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
+    [], sc, temps, counter_trial, orientation, current_test, fixCross, HCa, HCb);
     temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, AMB_EYE, EYE_TEST, opto_size, orientation, Stim_position, key, value, rt};
     if contains(value, 'ESCAPE')
         mean_reversals = 0;
@@ -110,10 +115,10 @@ doubleScreen, AMB_EYE,HC1,HC2, [], [], [], [], HCl, HCr, [], [], [], [], pixelsP
 % add a part to convert opto_size in logMAR?
    [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], opto_size, [], []);
    if sc.isFinished
-       [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, opto_size, Stim_position, ...
-           EYE_TEST, AMB_EYE, current_test, counter_trial, mt, iSC, FREQS_test);
+       [mean_reversals, success_reversal] = calculateMeanReversals(sc,mrt, maxNumReversals, opto_size, current_test, [], []);
+       temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', mean_reversals, 0, Stim_position, success_reversal, 'end_of_table', 0};
    else
-       mean_reversals =0;
+       mean_reversals = 0;
    end
    plotStaircaseValues(sc, temps, mean_reversals, [], opto_size, current_test, [], []);
 

@@ -12,12 +12,12 @@ function [E_min_size_dva, global_param] = calculateOptotypeSize(windowRect, glob
 
     opto_size = [];
 
-    if fixCross == false
-        [min_res, ~] = min(windowRect(3:4));
-        max_opto_size = round(min_res/5, -1) - 2;
-    else
+%     if fixCross == false
+%         [min_res, ~] = min(windowRect(3:4));
+%         max_opto_size = round(min_res/5, -1) - 2;
+%     else
         [min_res, ~] = min(windowRect(3:4));
         max_opto_size = round((min_res/2)/5, -1) - 2;
-    end
+%     end
     global_param.max_opto_size = max_opto_size;
 end

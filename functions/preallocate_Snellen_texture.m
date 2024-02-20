@@ -1,4 +1,4 @@
-function E_texture = preallocate_Snellen_texture(window)
+function [E_texture, E_shape] = preallocate_Snellen_texture(window)
     % Preallocate Snellen E texture
     % This function creates and returns the texture for the Snellen E shape.
 

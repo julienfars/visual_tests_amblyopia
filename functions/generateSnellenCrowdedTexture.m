@@ -1,8 +1,6 @@
-function [crowd, E_rand_orientation] = generateSnellenCrowdedTexture(window)
+function [crowd, E_rand_orientation] = generateSnellenCrowdedTexture(window, E_texture)
     % Generate Snellen Crowded Texture
     % This function generates a crowded Snellen E texture for the 'snellen_crowded' case.
-
-    E_texture = preallocate_Snellen_texture(window);
 
     crowd = repmat(E_texture, 1, 5);
     E_rand_num = rand(1, 5);

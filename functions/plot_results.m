@@ -10,7 +10,7 @@ function plot_results(staircase_ended, table, mean, numstaircase)
             idx = any(table{:, 'Staircase'} == numstaircase, 2);
             data = table(idx, 8);
         else
-            data = table(:, 8);
+            data = table(:, 7);
         end
 
         data(all(~data{:,:}, 2), :) = [];

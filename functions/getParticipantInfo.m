@@ -7,7 +7,7 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
 
     if contains(current_test, 'snellen') || contains(current_test, 'snellen_crowded')
         % Snellen-specific values
-        commonPrompt = [commonPrompt {'EDF file name?'}];
+        %commonPrompt = [commonPrompt];
         commonDefaults = {global_param.ID, num2str(global_param.distance_Snellen), global_param.EYE_TEST, global_param.AMB_EYE};
     else
         % Other test-specific values
@@ -24,7 +24,8 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
     AMB_EYE = answer{4, :};
 
     if contains(current_test, 'snellen') || contains(current_test, 'snellen_crowded')
-        edfFile = answer{end, :};
+        SIZE = [];
+        edfFile = [];
     else
         SIZE = answer{5, :};
         edfFile = answer{end, :};

@@ -13,7 +13,7 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
     [HC1, HC2, diff, doubleScreen] = deal([],[],[],[]);% [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = deal([],[],[],[],[],[],[],[]);
  else
     % Define black and white
-    if ~contains(current_test, 'snellen') || ~contains(current_test, 'snellen_crowded')
+    if ~contains(current_test, {'snellen', 'snellen_crowded'})
         while fixCross
             vbl = Screen('Flip', window);
             waitframes = 1;
@@ -140,17 +140,35 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
                     [HC1, HC2] = determineMovingSide(AMB_EYE, HCl, HCr);
                 end
     
+                switch true
+                    case contains(EYE_TEST, 'Left')
+                        buffer_r = 0;
+                        buffer_l = 0;
+                        contrast_l = [];
+                        contrast_r = [];
+                    case contains(EYE_TEST, 'Right')
+                        buffer_r = 1;
+                        buffer_l = 1;
+                        contrast_l = [];
+                        contrast_r = [];
+                    case contains(AMB_EYE, 'Left') && contains(EYE_TEST, 'Both')
+                        buffer_r = 1;
+                        buffer_l = 0;
+                        contrast_l = 1;
+                        contrast_r = 0.6;
+                    case contains(AMB_EYE, 'Right') && contains(EYE_TEST, 'Both')
+                        buffer_r = 0;
+                        buffer_l = 1;
+                        contrast_r = 1;
+                        contrast_l = 0.6;
+                    otherwise
+                        disp('Other combination of x and y');
+                 end
                 % Draw the half crosses to the screen
-                if contains(AMB_EYE, 'Left')
-                drawHalfCross(window, black, white, HC1, [], [], 0);
-                drawHalfCross(window, black, white, HC2, [], [], 1);
-                Screen('Flip', window);
-                else
-                drawHalfCross(window, black, white, HC2, [], [], 1);
-                drawHalfCross(window, black, white, HC1, [], [], 0);
-                Screen('Flip', window);
-                end
-    
+
+                drawHalfCross(window, black, white, HC1, [], [], buffer_l, contrast_l);
+                drawHalfCross(window, black, white, HC2, [], [], buffer_r, contrast_r);
+                
                 % Flip to the screen
                 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
@@ -161,10 +179,11 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
                 end
             end
     
-            % this part is "washing up" the screen, it removes the crosses from the
-            % display but leaves the frame
-            washUpScreen(window, HC1);
-            washUpScreen(window, HC2);
+            % this part is "washing up" the screen = it removes the crosses from the
+            % display 
+            washUpScreen(window, black, white, HC1, [], [], buffer_l) 
+            washUpScreen(window, black, white, HC2, [], [], buffer_r)
+            WaitSecs(1);
         end
     end
     
@@ -215,12 +234,12 @@ function cross = moveCross(cross, direction, pixelsPerPress)
     function washUpScreen(window, black, white, HC, FFa, FFb, EYE)
         % Washes up the screen, removing the crosses but leaving the frame
         rectColor = [1 1 1];
-    
         if ~nargin < 7
         Screen('SelectStereoDrawBuffer', window, EYE);
         end
-    
+        if ~isempty(HC)
         Screen('FillRect', window, rectColor*0.5, HC);
+        end
         if ~isempty(FFa)
             Screen('FillRect', window, white, FFa);
         end
