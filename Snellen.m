@@ -85,7 +85,6 @@ mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 while ~sc.isFinished           % keep looping until staircase concludes  
     [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
 doubleScreen, AMB_EYE,HC1,HC2, [], [], [], [], HCl, HCr, [], [], [], [], pixelsPerPress, black, white, ifi, current_test);
-
     [orientation, E_shape] = randomizeOrientation_snellen();
     E_texture = Screen('MakeTexture', window, E_shape);
     StimLevel = sc.curLevel;          % testing level from staircase
