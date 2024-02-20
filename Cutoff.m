@@ -127,8 +127,15 @@ onsetTime = GetSecs;
 [err] = eyelink_start_recording(var_eye_link);
 
 %% Wait for a button press
+  if contains(AMB_EYE, 'Left')
+      HCa = HC1;
+      HCb = HC2;
+  else
+      HCb = HC1;
+      HCa = HC2;
+  end
 [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
-    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
+    angular, sc, temps, counter_trial, orientation, current_test, fixCross, HCa, HCb);
 temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, EYE_TEST, AMB_EYE, contrast, propertiesMat(2), orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
     mean_reversals = 0;

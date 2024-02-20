@@ -168,19 +168,28 @@ onsetTime = GetSecs;
 [err] = eyelink_start_recording(var_eye_link);
 
 %% Wait for a button press
+  if contains(AMB_EYE, 'Left')
+      HCa = HC1;
+      HCb = HC2;
+  else
+      HCb = HC1;
+      HCa = HC2;
+  end
 [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
-    angular, staircaseArray(iSC), temps, counter_trial, orientation, current_test, fixCross, HC1, HC2);
+    angular, staircaseArray(iSC), temps, counter_trial, orientation, current_test, fixCross, HCa, HCb);
 temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, EYE_TEST, AMB_EYE, contrast, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
     break;
     mean_reversals = 0;
 end
-if staircaseArray(iSC).isFinished
     [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);
+
+if staircaseArray(iSC).isFinished
+    [mean_reversals, success_reversal] = calculateMeanReversals(staircaseArray(iSC), mrt, maxNumReversals, contrast, current_test, counter_trial, mt);
+    %temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', mean_reversals, 0, Stim_position, success_reversal, 'end_of_table', 0};   
 else 
     mean_reversals = 0;
 end
-[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt);
 plotStaircaseValues(staircaseArray(iSC), temps, mean_reversals, iSC, contrast, current_test, [], []);
 
 %% 'Wash' the display
