@@ -128,6 +128,6 @@ BY: credit must be given to the creator.
 NC: Only noncommercial uses of the work are permitted.
 SA: Adaptations must be shared under the same terms.
 
-See [Licence file](tbc)
+See [Licence file](LICENCE.md)
 
 ---
