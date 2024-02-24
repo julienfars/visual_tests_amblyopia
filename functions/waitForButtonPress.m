@@ -48,7 +48,7 @@ end
 
 % Define helper functions for each test condition
 function [value, sc] = handleNonTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, angular, sc)
-    if keyCode == escapeKey
+    if keyCode == skipKey
         value = 'ESCAPE';
     elseif (keyCode == rightKey && angular == 315) || (keyCode == leftKey && angular == 45)
         sc.doResp(1);
@@ -63,7 +63,7 @@ function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, ri
     value = 'WRONG_RESPONSE';
     if ~normal_testing
        switch keyCode
-        case escapeKey
+           case skipKey
             value = 'ESCAPE';
         case rightKey
             if angular(2) == 352.9
@@ -82,7 +82,7 @@ function [value, sc] = handleInterocularImbalanceConditions(keyCode, leftKey, ri
        end
     elseif normal_testing
        switch keyCode
-        case escapeKey
+        case skipKey
             value = 'ESCAPE';
         case rightKey
             if angular(2) == 352.9
@@ -104,7 +104,7 @@ end
 
 function [value, sc] = handleDichopticConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, acc_resp, att_test, sc, repeatNoise)
     value = 'WRONG_RESPONSE';   
-    if keyCode == escapeKey
+    if keyCode == skipKey
         value = 'ESCAPE';
     elseif keyCode == upKey && contains(acc_resp, 'top')
         handleDichopticResponse(sc, 1, repeatNoise);
@@ -121,7 +121,7 @@ end
 function [value, sc] = handleOtherTestConditions(keyCode, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, orientation, sc)
     value = 'WRONG_RESPONSE';
     
-    if keyCode == escapeKey
+    if keyCode == skipKey
         value = 'ESCAPE';
     elseif keyCode == rightKey && orientation == 0
         sc.doResp(1);

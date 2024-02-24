@@ -65,4 +65,4 @@ global_param.logMAR_BE_crowded = [];
 global_param.logMAR_crowded = [];
 
 %% end
-save('global_param.mat','global_param');
+save('data/Global_parameters/global_param.mat','global_param');

@@ -2,7 +2,7 @@ function [repeatNoise] = drawGratings_dichoptic(window, black, ARROWLT, ...
     ARROWRT, ARROWLB, ARROWRB, penWidthPixels, rectColor, HC1, ...
     waitTime, sinetex, allRects, orientation, propertiesMat, ...
     texSize, xCenter, yCenter, bgcontrast, fgcontrast, ...
-    noiseTexture, AMB_EYE)
+    noiseTexture, AMB_EYE, diff)
 
     repeatNoise = false;
 
@@ -26,8 +26,8 @@ function [repeatNoise] = drawGratings_dichoptic(window, black, ARROWLT, ...
     % Launch gabors and noise
     Screen('SelectStereoDrawBuffer', window, 0);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTexture', window, sinetex, [], allRects(:, 1), orientation, [], [], [], [], [], propertiesMat(1, :));
-    Screen('DrawTexture', window, sinetex, [], allRects(:, 2), orientation, [], [], [], [], [], propertiesMat(2, :));
+    Screen('DrawTexture', window, sinetex, [], allRects(:, 1)+diff, orientation, [], [], [], [], [], propertiesMat(1, :));
+    Screen('DrawTexture', window, sinetex, [], allRects(:, 2)+ diff, orientation, [], [], [], [], [], propertiesMat(2, :));
 
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);
@@ -57,8 +57,8 @@ function [repeatNoise] = drawGratings_dichoptic(window, black, ARROWLT, ...
     WaitSecs(waitTime);
     Screen('SelectStereoDrawBuffer',window,1);
     Screen('Blendfunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Screen('DrawTexture', window, sinetex, [], allRects(:,1), orientation, [], [], [], [], [], propertiesMat(1,:));
-    Screen('DrawTexture', window, sinetex, [], allRects(:,2), orientation, [], [], [], [], [], propertiesMat(2,:));
+    Screen('DrawTexture', window, sinetex, [], allRects(:,1)+ diff, orientation, [], [], [], [], [], propertiesMat(1,:));
+    Screen('DrawTexture', window, sinetex, [], allRects(:,2)+ diff, orientation, [], [], [], [], [], propertiesMat(2,:));
    
     dstGab_centerN = [0 0 1 0.5] .* texSize;
     dstGab_centerN = CenterRectArrayOnPoint(dstGab_centerN, xCenter, yCenter);

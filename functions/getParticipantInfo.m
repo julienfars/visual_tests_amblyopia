@@ -82,7 +82,7 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
             contrast_gabor = num2str(global_param.contrast_AE(3));
         end
         prompt_additional = {'Noise Contrast [0:1]', 'Contrast Gabor [0:1]', 'Cut-off frequency'};
-        defaults_additional = {global_param.dichop, contrast_gabor, '-'};
+        defaults_additional = {'0.1', contrast_gabor, '-'};
         answer_additional = inputdlg(prompt_additional, 'Additional Parameters', 2, defaults_additional); % Opens dialog window
         NOISE = str2num(answer_additional{1, :}); % starting noise
         CONTRAST = str2double(answer_additional{2, :});
