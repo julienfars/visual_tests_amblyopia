@@ -11,8 +11,17 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
         commonDefaults = {global_param.ID, num2str(global_param.distance_Snellen), global_param.EYE_TEST, global_param.AMB_EYE};
     else
         % Other test-specific values
+        if contains(current_test, 'contrast_interleaved')
+            Curr_test = 'ctrst';
+        elseif contains(current_test, 'cutoff')
+            Curr_test = 'cutoff';
+        elseif contains(current_test, 'interocular_imbalance')
+            Curr_test = 'inim';
+        elseif contains(current_test, 'dichoptic')
+            Curr_test = 'dich';
+        end
         commonPrompt = [commonPrompt {'Stimuli size', 'EDF file name?'}];
-        commonDefaults = [commonDefaults {num2str(global_param.stim_size), strcat(global_param.ID, current_test)}];
+        commonDefaults = [commonDefaults {num2str(global_param.stim_size), strcat(global_param.ID, Curr_test)}];
     end
 
     % Prompt user for input

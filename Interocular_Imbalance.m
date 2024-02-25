@@ -45,7 +45,7 @@ stereo = 100;
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
-[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereo, 'inim', width, height);
 
 %% Other parameters
 % Call the function to set up other parameters

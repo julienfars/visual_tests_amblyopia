@@ -29,7 +29,6 @@ global_param = initializeReduced(global_param);
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
 current_test = 'contrast_interleaved';
-
 % Call the function to get participant information
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test...
     , CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
@@ -47,7 +46,8 @@ stereo = 100; % is supposed to be 100 when using display++
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
-[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
+%[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereo, 'ctrst', width, height);
 
 %% Other parameters
 % Call the function to set up other parameters

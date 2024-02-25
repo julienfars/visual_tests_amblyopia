@@ -56,7 +56,7 @@ Screen('FillRect', window, [0.5 0.5 0.5 bgcontrast]); %bgcontrast
 
 %% Eyelink Calibration
 % starts the calibration of the eye-tracking (must be performed before each test because the condition changes)
-[el] = eyelink_calibration(var_eye_link,window, stereo, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereo, 'dich', width, height);
 
 %% Other Parameters
 [xCenter, yCenter, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey] = setupOtherParameters(window, windowRect);
