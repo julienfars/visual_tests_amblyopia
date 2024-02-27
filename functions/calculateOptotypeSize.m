@@ -10,6 +10,10 @@ function [E_min_size_dva, global_param] = calculateOptotypeSize(windowRect, glob
     global_param.MAR_min_theory = 2*atand((pix_size/2)/DISTANCE) * 60;
     global_param.logMAR_min_theory = log10(global_param.MAR_min_theory);
 
+%     MAR_min_theory = 2*atand((((1/(1920/700))*20)/2)/2500)*60;
+%     logMAR_min_theory = log10(MAR_min_theory); % should be 0.0012 => 6/6
+%     or 20/20 Snellen
+
     opto_size = [];
 
 %     if fixCross == false
