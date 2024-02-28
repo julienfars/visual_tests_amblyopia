@@ -9,7 +9,13 @@ function propertiesMat = trainingTrialsProperties(sc, num_training, gaborDimPix,
 
     % Convert StimLevel to linear units
     linStimLevel = (10^StimLevel);
-
+    
+%     If you go above 1cpp of gabor frequency, pscyhtoolbox glitched and displays lower gabor frequency
+%     The following if loop prevents this situation
+    if linStimLevel > gaborDimPix 
+        linStimLevel = gaborDimPix;
+    end
+    
     % Calculate frequency and sigma
     freq = linStimLevel / gaborDimPix;
     sigma = gaborDimPix / 6;

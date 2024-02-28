@@ -33,6 +33,7 @@ global_param.Retest = contains(retest, 'true');% Set retest variable
 % calls global.param to retrive information from the screen size, distance
 % from the screen, etc...
 current_test = 'dichoptic';
+global_param.EYE_TEST = 'Both';
 [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_test, CUTOFF, NOISE, CONTRAST, global_param] = getParticipantInfo(global_param, current_test);
 global_param.ID = SUBJECT; % records the participant's ID in the global_param structure 
 global_param.AMB_EYE = AMB_EYE; % records the participant's amblyopic eye in the global_param structure 
@@ -75,7 +76,7 @@ eyelink_clear_screen(var_eye_link,el)
 %% Basic Grating parameters
 
 [gaborDimPix, PixelPerDeg] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size, [], current_test);
-[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, CUTOFF, CONTRAST, global_param.dichop_contrast_high, global_param.dichop_contrast_low);
+[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, str2num(CUTOFF), CONTRAST, global_param.dichop_contrast_high, global_param.dichop_contrast_low);
 nGabors = 2; % number of gratings on display
 [allRects, propertiesMat] = setupGratingsParameters(xCenter, yCenter, gaborDimPix, nGabors, phase, freq, contrast_high); % we draw the grating already but do not display it (efficient coding)
 Screen('DrawTexture', window, sinetex, [], [], tilt, [], [], [], [], [], [0,1,0,0]);
@@ -117,33 +118,18 @@ mrt = createMRTTable(maxNumReversals, nb_table, 'simple');
 
  repeatNoise = false; % used for repeating the same noise when having attention trial (UP/DOWN)
  att_test = 0; % counter for the numbers of attention tests failed 
+ [HC1, HC2, FF1w, FF1b, FF2w, FF2b] = resetCross(AMB_EYE, HCl, HCr, FFLw, FFLb, FFRw, FFRb);
  doubleScreen = false;
  counter_trial = 0;
  num_training = 0;
-    % will determine which side of the crosses will be moving (along with one copy of the fusion frame)
-    if contains(AMB_EYE, 'Left') 
-            HC1 = HCl;
-            HC2 = HCr;
-            FF1w = FFLw;
-            FF1b = FFLb;
-            FF2w = FFRw;
-            FF2b = FFRb;
-        else
-            HC1 = HCr;
-            HC2 = HCl;
-            FF1w = FFRw;
-            FF1b = FFRb;
-            FF2w = FFLw;
-            FF2b = FFLb;
-    end
-
+  
 diff = zeros(4,1);
 rectColor = [1 1 1];
 
 while ~sc.isFinished           % keep looping until staircase concludes
     
 % run the fixing cross before the trial
-   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
+   [HC1,HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixCross,window, escapeKey, leftKey, rightKey, upKey, downKey, spaceKey, ...
 doubleScreen, AMB_EYE,  EYE_TEST, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw, FFLb, FFRw, FFRb, pixelsPerPress, black, white, ifi, current_test);
 
     StimLevel = sc.curLevel;                   % testing level from staircase
@@ -179,7 +165,14 @@ doubleScreen, AMB_EYE,  EYE_TEST, HC1,HC2, FF1w, FF1b, FF2w, FF2b,HCl, HCr, FFLw
     propertiesMat);
    
 %% Primer coordinates 
-    [ARROWLT, ARROWRT, ARROWLB, ARROWRB, penWidthPixels] = setupPrimerCoordinates(HC1, HC2);
+if contains(AMB_EYE, 'Left')
+    HCa = HC1;
+    HCb = HC2;
+else 
+    HCa = HC2;
+    HCb = HC1;
+end
+    [ARROWLT, ARROWRT, ARROWLB, ARROWRB, penWidthPixels] = setupPrimerCoordinates(HCa, HCb);
 
     %% Eyelink Start trial
 eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
@@ -192,16 +185,15 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     if contains(ATT_TRIAL, 'false')
     [repeatNoise] = drawGratings_dichoptic(window, black, ARROWLT, ...
     ARROWRT, ARROWLB, ARROWRB, penWidthPixels, rectColor, HC1, ...
-    waitTime, sinetex, allRects, orientation, propertiesMat, ...
+    waitTime, sinetex, allRects, 0, propertiesMat, ... # orientation at the spot of 0
     texSize, xCenter, yCenter, bgcontrast, fgcontrast, ...
-    noiseTexture, AMB_EYE);
+    noiseTexture, AMB_EYE, diff);
  
     elseif  contains(ATT_TRIAL, 'true')
     [repeatNoise] = drawAttentionCue(window, black, ARROWLT, ...
     ARROWRT, ARROWLB, ARROWRB, penWidthPixels, rectColor, HC1, ...
     waitTime, texSize, xCenter, yCenter, bgcontrast, fgcontrast, ...
     noiseTexture, ARROW_X, ARROW_Y, isConvex, white, AMB_EYE);
-
     end
 
     % Flip to the screen
@@ -211,10 +203,11 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     
 %% Wait for a button press
 
-    onsetTime = GetSecs;
     time_presentation_function(windowRect, window, gaborDimPix, xCenter, yCenter, diff, black, white, FF1b, FF1w, FF2b, FF2w, ...
         current_test, false, 0.2, AMB_EYE, bgcontrast)
     Screen('Flip', window);
+
+        onsetTime = GetSecs;
 
     % Wait for a button press
     [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, repeatNoise, ...
@@ -226,17 +219,20 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     end
     [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], NOISE, [], [], []);
     if sc.isFinished
-        [temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, NOISE, Stim_position, ...
-            EYE_TEST, AMB_EYE, current_test, counter_trial, mt, iSC, []);
+        [mean_reversals, success_reversal] = calculateMeanReversals(sc,mrt, maxNumReversals, NOISE, current_test, [], [], []);
+        temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', contrast_low, contrast_high, propertiesMat(1,2), 0, mean_reversals, Stim_position, success_reversal, 'end_of_table', 0};
     else 
-       mean_reversals = 0;
+        mean_reversals = 0;
     end
     plotStaircaseValues(sc, temps, mean_reversals, [], NOISE, current_test, [], [], []);
+    
    if contains(var_eye_link, 'true')  
            Eyelink('Message', 'BLANK_SCREEN');
            WaitSecs(0.1); % Add 100 msec of data to catch final events before stopping
            Eyelink('StopRecording'); % Stop tracker recording
    end
+   WaitSecs(1);
+
 end
 Priority(0);
 

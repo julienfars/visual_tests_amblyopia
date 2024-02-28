@@ -21,17 +21,19 @@ function [mrt, counter_mrt] = calculateLastSixReversals(sc, temps, mrt, num_trai
             trialCount_2 = findLastRowIndexWithValue(temps, trial_num, value-1);
 
             recordReversal = recordReversal && (sc.trialCount > 2) && (temps{trialCount, 4}) ~= (temps{trialCount_2, 4}) && (sc.revCount ~= 0);
-            mrt(counter_mrt, :) = {sc.revCount, var1, iSC}; % Recorded in a table titled mrt
+            mrt(counter_mrt, :) = {sc.revCount, var1, iSC, var2}; % Recorded in a table titled mrt
             counter_mrt = counter_mrt + 1;
 
         case 'interocular_imbalance'
             recordReversal = recordReversal && (sc.trialCount > 1) && (temps{sc.trialCount,{'Reversal'}} ~= temps{sc.trialCount-1,{'Reversal'}});
             if normal_testing
-                value = var1;
+                value1 = var1;
+                value2 = var2;
             else
-                value = var2;
+                value1 = var2;
+                value2 = var1;
             end
-            mrt(sc.revCount, :) = {sc.revCount, value, iSC}; % Recorded in a table titled mrt
+            mrt(sc.revCount, :) = {sc.revCount, value1, iSC, value2}; % Recorded in a table titled mrt
 
         case 'dichoptic'
             recordReversal = recordReversal && (sc.trialCount > 1) && (temps{sc.trialCount,{'Reversal'}} ~= temps{sc.trialCount-1,{'Reversal'}});

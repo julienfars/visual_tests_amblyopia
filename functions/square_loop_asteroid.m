@@ -1,4 +1,4 @@
-function [dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = SQUARE_LOOP(expt, log_disparity, stereocue)
+function [dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = square_loop_asteroid(expt, log_disparity, stereocue, randposition)
     % This function sets up other parameters related to the asteroid experiment.
 
     dotxL = [];

@@ -1,7 +1,3 @@
-%{
-- add training trials? 
-%}
-
 %% Setup
 sca;
 commandwindow; % just to be sure to open the command window
@@ -108,7 +104,7 @@ verbose = 1;        % set to 1 for verbose staircase output
 nb_table = numel(FREQS);
 temps = createTable(maxNumTrials, nb_table, ["string", "datetime", "double", "double", "string", ...
     "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "double"], ...
-    ["Task", "Date_time", "Trial", "Reversal", "AMB_eye", "Eye_tested", "Contrast_AE", "Contrast_FE", "Staircase",...
+    ["Task", "Date_time", "Trial", "Reversal", "AMB_eye", "Eye_tested", "Contrast_FE", "Contrast_AE", "Staircase",...
     "Frequency_dva", "Orientation_AE", "Orientation_FE", "Position", "Key", "Success", "RT"]);
 
 %% creating the reversals table
@@ -168,29 +164,32 @@ eyelink_start_trial(var_eye_link, staircaseArray(iSC).trialCount, orientation_li
 [err] = eyelink_start_recording(var_eye_link);
 
 %% set the time presentation then flip the window 
-time_presentation_function(window, gaborDimPix, xCenter, yCenter, diff, black, ...
-    white, FF1b, FF1w, FF2b, FF2w, current_test, debug, 0.2);
+time_presentation_function(windowRect, window, gaborDimPix, ...
+xCenter, yCenter, diff, black, white, FF1b, FF1w, FF2b, ...
+FF2w, current_test, debug, 0.2, AMB_EYE, []);
 Screen('Flip', window);
    
 %% Wait for a button press
 onsetTime = GetSecs;
-if contains(EYE_TEST, 'Left')
+if contains(AMB_EYE, 'Left')
     angular = [angular_1 angular_2];
 else 
     angular = [angular_2 angular_1];
 end
-[rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, ...
+    [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, ...
     downKey, escapeKey, spaceKey, skipKey,angular, staircaseArray(iSC), temps, counter_trial, [], current_test, fixCross, HC1, HC2, normal_testing);
-temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, ...
-    AMB_EYE, EYE_TEST, contrastAE, contrast, iSC, propertiesMatAE(2)*gaborDimPix, angle_results_AE, angle_results_FE, Stim_position, key, value, rt};
+    temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, ...
+    AMB_EYE, EYE_TEST, contrast,contrastAE, iSC, propertiesMatAE(2)*gaborDimPix, angle_results_AE, angle_results_FE, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
     mean_reversals = 0;
     break;
 end
 
-[mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, 0, current_test, counter_mrt, contrastAE, contrast, iSC, normal_testing);
+    [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, 0, current_test, counter_mrt, contrastAE, contrast, iSC, normal_testing);
 if staircaseArray(iSC).isFinished
-[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(staircaseArray(iSC), temps, mrt, maxNumReversals, contrast, Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, mt, iSC, FREQS_test);
+    [mean_reversals, success_reversal, mt] = calculateMeanReversals(staircaseArray(iSC),mrt, maxNumReversals, contrast, current_test, iSC, FREQS_test, mt);
+    temps(counter_trial + 1,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, 'MEAN', 'REVERSAL', mean_reversals, 1, iSC, propertiesMat(2)*gaborDimPix, 0, 0, Stim_position, success_reversal, 'end_of_table', 0};
+    counter_trial = counter_trial + 1;
 else 
    mean_reversals = 0;
 end

@@ -41,13 +41,14 @@ DEBUG = 0; %runs real test when at 0
 [expt] = asteroid_param(SUBJECT,AMB_EYE, EYE_TEST);
 [window, windowRect, expt, blueRectLeftOn, blueRectLeftOff, ...
     blueRectRightOn, blueRectRightOff, width, height, white, ...
-    black, screenNumber, stereoMode, SIZE_X, SIZE_Y] = setupScreen_asteroid(fixCross, expt);
+    black, screenNumber, stereoMode, SIZE_X, SIZE_Y, ifi] = setupScreen_asteroid(fixCross, expt);
 
 %% Other Parameters
 [keycode, LEFT, RIGHT, DOWN, UP, SPACE, exit, top_leftKey, top_rightKey, bottom_leftKey, bottom_rightKey] = setupOtherParameters_asteroid();
 
 %% filename 
-filename = 'data/' + expt.subject + "_" + date + '_asteroid';
+%filename = 'data/' + expt.subject + "_" + date + '_asteroid';
+filename = strrep(strrep(['data/ASTEROIDCOMPUTER4AFC_' expt.subject '_' datestr(now) '.mat'],' ','_'),':','-');
 
 %% Eyelink Calibration
 [el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
@@ -66,16 +67,16 @@ Screen('LoadNormalizedGammaTable',window,linspace(0,(255/256),256)'*ones(1,3));
 Screen(window,'Flip');
 
 keyCode(1:256)=0;
-while (keyCode(top_leftKey)==0 && keyCode(top_rightKey)==0 && keyCode(bottom_leftKey)== 0 && keyCode(bottom_rightKey)==0 && keyCode(KbName('ESCAPE'))==0)
-   
-   [keyisdown, secs, keyCode, deltaSecs] = KbCheck(-1);
+ while (keyCode(top_leftKey)==0 && keyCode(top_rightKey)==0 && keyCode(bottom_leftKey)== 0 && keyCode(bottom_rightKey)==0 && keyCode(KbName('ESCAPE'))==0)
+    
+    [keyisdown, secs, keyCode, deltaSecs] = KbCheck(-1);
    [x,y,buttons] = GetMouse;
-   
-end
-while(keyisdown)    % wait for keys to be released
-   [keyisdown, secs, keycode] = KbCheck(-1);
-   WaitSecs(0.001);
-end
+    
+ end
+ while(keyisdown)    % wait for keys to be released
+    [keyisdown, secs, keycode] = KbCheck(-1);
+    WaitSecs(0.001);
+ end
 Screen(window,'Flip');
 
 
@@ -130,9 +131,127 @@ eyelink_start_trial(var_eye_link, ntrials, TARGET_Position, [])
          % 90ms expired
          nlp_timer_1 = GetSecs;    % reset timer
                   
-         [dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = square_loop_asteroid(expt, log_disparity, stereocue);
+         %[dotxL, dotyL, dotcolL, dotxR, dotyR, dotcolR, disparity_arcsec, disparity_pixels] = square_loop_asteroid(expt, log_disparity, stereocue, randposition);
+         for SQUARE=1:4
 
-      end % nlp getsec loop
+            Position=randposition(SQUARE);
+            
+            disparity_arcsec=(10^log_disparity);
+            disparity_pixels=((10^log_disparity)*expt.nx)/(expt.degreesfullscreenX*3600);%%PIXELS
+            
+            tgtxcen = expt.tgtxcen(Position);
+            tgtycen = expt.tgtycen(Position);
+            
+            % Background dots:
+            % Pick random locations:
+            dotXpixBG = rand(1,expt.nBGdots) * expt.stimNpixX;
+            dotYpixBG = rand(1,expt.nBGdots) * expt.stimNpixY; %dotYpixBG = rand(1,expt.nBGdots) * (expt.stimNpixY);
+            dotcolBG = ChooseDotColors(expt.nBGdots);
+            
+            % TARGET_Position patch of dots:
+            % Generate random dot positions for TGT
+            dotXpixTG = tgtxcen-expt.tgtXsizepix/2 + rand(1,expt.nTGdots) * expt.tgtXsizepix;
+            dotYpixTG = tgtycen-expt.tgtYsizepix/2 + rand(1,expt.nTGdots) * expt.tgtYsizepix;
+            
+            dotXpixBG1 = tgtxcen-expt.BGXsizepix/2 + rand(1,expt.nBGdots) * expt.BGXsizepix;
+            dotYpixBG1 = tgtycen-expt.BGYsizepix/2 + rand(1,expt.nBGdots) * expt.BGYsizepix;
+            dotcolBG1 = ChooseDotColors(expt.nBGdots);
+            
+            % Now apply the disparity: We apply -disp/2 to the bg  and +bg/2 to the tgt so
+            % that the relative disparity is as specified.
+            %qdisp = trial.dispamplitudepix/4;
+            %qdisp=(10.^(expt.disparity_indisparity_arcsec) / expt.disparity_arcsecperpix)/4
+            dotXpixBGL = dotXpixBG1-disparity_pixels/4;%%%Units in pixels
+            dotXpixBGR = dotXpixBG1+disparity_pixels/4;%%%Units in pixels
+            if SQUARE==1
+               
+               dotcolTG = ChooseDotColorsTarget(expt.nTGdots,stereocue);
+               
+               dotXpixTGL = dotXpixTG+disparity_pixels/4;%%%Units in pixels
+               dotXpixTGR = dotXpixTG-disparity_pixels/4;%%%Units in pixels
+            else
+               dotcolTG = ChooseDotColors(expt.nTGdots);
+               
+               dotXpixTGL = dotXpixTG-disparity_pixels/4;%%%Units in pixels
+               dotXpixTGR = dotXpixTG+disparity_pixels/4;%%%Units in pixels
+            end
+            
+            % Remove any BG dots which fall in the shifted position of the tgt:
+            % Left eye: TARGET_Position is centred on x=tgtxcen-qdisp after the shift, y=tgtycen as no vertical disparity:
+            jkeepL = find( ~ ( abs(dotXpixBGL-tgtxcen-disparity_pixels/4)<(expt.tgtXsizepix)/2 & abs(dotYpixBG1-tgtycen)<(expt.tgtYsizepix)/2 ));
+            dotXpixBGL = dotXpixBGL(jkeepL);
+            dotYpixBGL = dotYpixBG1(jkeepL);
+            dotcolBGL = dotcolBG1(:,jkeepL);
+            
+            %disparity_pixels/4Right eye: TARGET_Position is centred on tgtxcen+qdisp after the shift y=tgtycen as no vertical disparity:
+            jkeepR = find( ~ ( abs(dotXpixBGR-tgtxcen+disparity_pixels/4)<(expt.tgtXsizepix)/2 & abs(dotYpixBG1-tgtycen)<(expt.tgtYsizepix)/2 ));
+            dotXpixBGR = dotXpixBGR(jkeepR);
+            dotYpixBGR = dotYpixBG1(jkeepR);
+            dotcolBGR = dotcolBG1(:,jkeepR);
+            
+            if SQUARE==1
+               dotxL1   = [dotXpixTGL  dotXpixBGL]; % wait! is it why there is an issue? use 'cat(2,dotXpixTGL,dotXpixBGL);'?
+               dotxL1   = round(dotxL1); %added --> not working!!!!!
+               dotyL1   = [dotYpixTG   dotYpixBGL];
+               dotyL1   = round(dotyL1); %added
+               dotcolL1 = [ dotcolTG dotcolBGL];
+               dotxR1   = [dotXpixTGR  dotXpixBGR];
+               dotxR1   = round(dotxR1); %added
+               dotyR1   = [dotYpixTG   dotYpixBGR];
+               dotyR1   = round(dotyR1); %added
+               dotcolR1 = [dotcolTG    dotcolBGR ];
+            end
+            if SQUARE==2
+               dotxL2= [dotXpixTGL dotXpixBGL];
+               dotxL2   = round(dotxL2); %added
+               dotyL2 = [dotYpixTG dotYpixBGL];
+               dotyL2   = round(dotyL2); %added
+               dotcolL2 = [ dotcolTG dotcolBGL];
+               dotxR2 = [dotXpixTGR dotXpixBGR];
+               dotxR2   = round(dotxR2); %added
+               dotyR2 = [dotYpixTG dotYpixBGR];
+               dotyR2   = round(dotyR2); %added
+               dotcolR2 = [ dotcolTG dotcolBGR];
+            end
+            
+            if SQUARE==3
+               dotxL3= [dotXpixTGL dotXpixBGL];
+               dotxL3   = round(dotxL3); %added
+               dotyL3 = [dotYpixTG dotYpixBGL];
+               dotyL3   = round(dotyL3); %added
+               dotcolL3 = [ dotcolTG dotcolBGL];
+               dotxR3 = [dotXpixTGR dotXpixBGR];
+               dotxR3   = round(dotxR3); %added
+               dotyR3 = [dotYpixTG dotYpixBGR];
+               dotyR3   = round(dotyR3); %added
+               dotcolR3 = [ dotcolTG dotcolBGR];
+            end
+            if SQUARE==4
+               dotxL4= [dotXpixTGL dotXpixBGL];
+               dotxL4   = round(dotxL4); %added
+               dotyL4 = [dotYpixTG dotYpixBGL];
+               dotyL4   = round(dotyL4); %added
+               dotcolL4 = [ dotcolTG dotcolBGL];
+               dotxR4 = [dotXpixTGR dotXpixBGR];
+               dotxR4   = round(dotxR4); %added
+               dotyR4 = [dotYpixTG dotYpixBGR];
+               dotyR4   = round(dotyR4); %added
+               dotcolR4 = [ dotcolTG dotcolBGR];
+            end
+            
+
+         end % for square
+         
+         dotxL   = [dotxL1   dotxL2   dotxL3   dotxL4   ];
+         dotyL   = [dotyL1   dotyL2   dotyL3   dotyL4   ];
+         dotcolL = [dotcolL1 dotcolL2 dotcolL3 dotcolL4 ];
+         dotcolL = round(dotcolL);
+         
+         dotxR   = [dotxR1   dotxR2   dotxR3   dotxR4   ];
+         dotyR   = [dotyR1   dotyR2   dotyR3   dotyR4   ];
+         dotcolR = [dotcolR1 dotcolR2 dotcolR3 dotcolR4 ];
+         dotcolR = round(dotcolR);
+          end % nlp getsec loop
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -194,12 +313,20 @@ eyelink_start_trial(var_eye_link, ntrials, TARGET_Position, [])
             HC2 = HCl;
              end
     end
-    
+    if contains(AMB_EYE, 'Left')
+            buffer_l = 0;
+            buffer_r = 1;
+            else
+            buffer_l = 1;
+            buffer_r = 0;
+    end
+
+
        % Draw the half crosses to the screen
-    Screen('SelectStereoDrawBuffer',window,0);
+    Screen('SelectStereoDrawBuffer',window,buffer_l);
     Screen('FillRect', window, white, HC1);
 
-    Screen('SelectStereoDrawBuffer',window,1);
+    Screen('SelectStereoDrawBuffer',window,buffer_r);
     Screen('FillRect', window, white, HC2);
 
     % Flip to the screen
@@ -215,10 +342,10 @@ eyelink_start_trial(var_eye_link, ntrials, TARGET_Position, [])
     baseRect = [0 0 200 250];
     [xCenter, yCenter] = RectCenter(windowRect);
     centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
-    Screen('SelectStereoDrawBuffer',window,0);
+    Screen('SelectStereoDrawBuffer',window,buffer_l);
     Screen('FillRect', window, [0, 0, 0], HC1);
 
-    Screen('SelectStereoDrawBuffer',window,1);
+    Screen('SelectStereoDrawBuffer',window,buffer_r);
     Screen('FillRect', window, [0, 0, 0], HC2);
     Screen('Flip', window);
     WaitSecs(1);
@@ -235,9 +362,7 @@ eyelink_start_trial(var_eye_link, ntrials, TARGET_Position, [])
         cen_R = cen_amb; 
         cen_L = cen_fe;
     end
-   else 
-       cen_R = [0 0];
-       cen_L = [0 0];
+   
    end
 
 %% make ovals instead of dots
@@ -868,7 +993,7 @@ Screen(window,'Flip');
 % Clear screen
 sca;
 
-% ListenChar(0);
+ListenChar(0);
 KbQueueRelease
 
 % Package up the important data and store it

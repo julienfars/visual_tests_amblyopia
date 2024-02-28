@@ -64,7 +64,7 @@ eyelink_clear_screen(var_eye_link,el)
 % then we set up the staircase procedure
 ifi = Screen('GetFlipInterval', window);
 % these parameters control the staircase (change it to remove the extra stepSizes)
-StimLevels      = log10(1):0.00001:log10(100);     % stimulus levels from 1 to 100 (log) 
+StimLevels      = log10(1):0.00001:log10(72);     % stimulus levels from 1 to 100 (log) 
 initStepSize    = 0.6;      % staircase step size before first reversal
 stepSize        = 0.4;      % staircase step size after first reversal - has more reversals (see staircase code)
 nRightToAscend  = 3;        % number of "correct" responses before ascending
@@ -145,11 +145,12 @@ end
 %% Record/display the results
 [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], propertiesMat(2), [], []);
 if sc.isFinished
-[temps, counter_trial, mt, mean_reversals] = calculateMeanReversals(sc, temps, mrt, maxNumReversals, propertiesMat(2), Stim_position, EYE_TEST, AMB_EYE, current_test, counter_trial, [], [], []);
+[mean_reversals, success_reversal] = calculateMeanReversals(sc,mrt, maxNumReversals, propertiesMat(2), current_test, [], [], []);
+temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', 1, mean_reversals, 0, Stim_position, success_reversal, 'end_of_table', 0};
 else 
    mean_reversals = 0;
 end
-plotStaircaseValues(sc, temps, mean_reversals, [], propertiesMat(2), current_test, [], []);
+plotStaircaseValues(sc, temps, mean_reversals, [], propertiesMat(2), current_test, [], [], [])
 
 %% 'Wash' the display
 % after the stim was displayed, we wash the screen by displaying a

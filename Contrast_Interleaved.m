@@ -64,9 +64,9 @@ eyelink_clear_screen(var_eye_link,el)
 
 %% Basic Gabor parameters
 % Call the function to set up basic Gabor parameters
-[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS] = setupBasicGaborParameters(windowRect, ...
+[gaborDimPix, PixelPerDeg, size_stim_pix, FREQS_dva] = setupBasicGaborParameters(windowRect, ...
     global_param.screen_size, global_param.distance, global_param.stim_size, FREQS_test, current_test);
-FREQS = FREQS.*CUTOFF; 
+FREQS = FREQS_test.*CUTOFF; 
 %% Other Gabor Parameters 
 [gabortex, aspectRatio, phase, contrast] = createGaborTexture(window, gaborDimPix, current_test);
 
@@ -86,7 +86,7 @@ nWrongToAscend  = 1;        % number of "incorrect" responses before ascending
 nRightToDescend = 3;        % number of "correct" responses before descending
 maxNumTrials    = 40;       % maximum number of trials for each staircase
 maxNumReversals = 8;        % maximum number of reversals for staircase
-startLevel      = log10(50);% starting level of staircase (50% should be manageable to begin with)
+startLevel      = log10(80);% starting level of staircase (50% should be manageable to begin with)
 verbose         = 1;        % set to 1 for verbose staircase output
 
 
@@ -177,16 +177,17 @@ onsetTime = GetSecs;
   end
 [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey,...
     angular, staircaseArray(iSC), temps, counter_trial, orientation, current_test, fixCross, HCa, HCb);
-temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, EYE_TEST, AMB_EYE, contrast, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, key, value, rt};
+temps(counter_trial,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, AMB_EYE, EYE_TEST, contrast, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, key, value, rt};
 if contains(value, 'ESCAPE')
-    break;
     mean_reversals = 0;
+    break;
 end
     [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);
 
 if staircaseArray(iSC).isFinished
-    [mean_reversals, success_reversal] = calculateMeanReversals(staircaseArray(iSC), mrt, maxNumReversals, contrast, current_test, counter_trial, mt);
-    %temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', mean_reversals, 0, Stim_position, success_reversal, 'end_of_table', 0};   
+    [mean_reversals, success_reversal, mt] = calculateMeanReversals(staircaseArray(iSC),mrt, maxNumReversals, contrast, current_test, iSC, FREQS_test, mt);
+    temps(counter_trial + 1,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, 'MEAN', 'REVERSAL', mean_reversals, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, success_reversal, 'end_of_table', 0};
+    counter_trial = counter_trial + 1;
 else 
     mean_reversals = 0;
 end

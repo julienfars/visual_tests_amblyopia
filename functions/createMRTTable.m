@@ -16,8 +16,8 @@ function mrt = createMRTTable(maxNumReversals, nb_table, staircase_type)
                 varNames = ["ReversalNumber", "Value"];
                 varTypes = ["double", "double"];
             case 'interleaved'
-                varNames = ["ReversalNumber", "Value", "Staircase"];
-                varTypes = ["double", "double", "double"];
+                varNames = ["ReversalNumber", "Value", "Staircase", "Contrast"];
+                varTypes = ["double", "double", "double", "double"];
             % Add more scenarios as needed
             otherwise
                 varNames = defaultVarNames;
