@@ -19,6 +19,8 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
             Curr_test = 'inim';
         elseif contains(current_test, 'dichoptic')
             Curr_test = 'dich';
+        elseif contains(current_test, 'asteroid')
+            Curr_test = 'ast';
         end
         commonPrompt = [commonPrompt {'Stimuli size', 'EDF file name?'}];
         commonDefaults = [commonDefaults {num2str(global_param.stim_size), strcat(global_param.ID, Curr_test)}];

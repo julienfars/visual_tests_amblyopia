@@ -17,11 +17,17 @@ function [el] = eyelink_calibration(var_eye_link, window, stereoMode, CurrTest, 
         % Set calibration/validation/drift-check size as well as background and target colors.
         el.calibrationtargetsize = 3; % Outer target size as percentage of the screen
         el.calibrationtargetwidth = 0.7; % Inner target size as percentage of the screen
-        el.backgroundcolour = [0.5 0.5 0.5]; % RGB grey
-        el.calibrationtargetcolour = [0 0 0]; % RGB black
-
-        % Set "Camera Setup" instructions text color so it is different from the background color
-        el.msgfontcolour = [0 0 0]; % RGB black
+        if contains(CurrTest, 'ast')
+            el.backgroundcolour = [0 0 0]; % RGB black
+            el.calibrationtargetcolour = [1 1 1]; % RGB white
+            % Set "Camera Setup" instructions text color so it is different from the background color
+            el.msgfontcolour = [1 1 1]; % RGB white
+        else
+            el.backgroundcolour = [0.5 0.5 0.5]; % RGB grey
+            el.calibrationtargetcolour = [0 0 0]; % RGB black
+            % Set "Camera Setup" instructions text color so it is different from the background color            
+            el.msgfontcolour = [0 0 0]; % RGB black
+        end
 
         % Use an image file instead of the default calibration bull's eye targets.
         el.calTargetType = 'image';
@@ -73,7 +79,7 @@ function filename = getFilename(CurrTest, baseName)
     %   baseName: Base name of the file
     filepath=fileparts(which('eyelink_calibration.m'));
 
-    if contains(CurrTest, 'asteroid')
+    if contains(CurrTest, 'ast')
         filename = [filepath '/' 'targets' '/' baseName 'BW.png'];
     else
         filename = [filepath '/' 'targets' '/' baseName '.png'];

@@ -51,7 +51,7 @@ DEBUG = 0; %runs real test when at 0
 filename = strrep(strrep(['data/ASTEROIDCOMPUTER4AFC_' expt.subject '_' datestr(now) '.mat'],' ','_'),':','-');
 
 %% Eyelink Calibration
-[el] = eyelink_calibration(var_eye_link,window, stereoMode, [], width, height);
+[el] = eyelink_calibration(var_eye_link,window, stereoMode, 'ast', width, height);
 
 %% clear screen of host PC 
 eyelink_clear_screen(var_eye_link,el)

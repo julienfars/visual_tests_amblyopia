@@ -78,7 +78,7 @@ StimLevels      = log10(1):0.00001:log10(100); % stimulus levels from 1 to 100 (
 initStepSize    = 0.4;      % staircase step size before first reversal
 stepSize        = 0.2;      % staircase step size after first reversal - has more reversals (see staircase code)
 nWrongToAscend  = 1;        % number of "correct" responses before ascending
-nRightToDescend = 1;        % number of "incorrect" responses before descending
+nRightToDescend = 3;        % number of "incorrect" responses before descending
 maxNumTrials    = 30;       % maximum number of trials for each staircase
 maxNumReversals = 8;        % maximum number of reversals for staircase
 if normal_testing 
