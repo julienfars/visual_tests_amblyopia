@@ -201,7 +201,7 @@ eyelink_stop_recording_and_write_variables(var_eye_link,staircaseArray(iSC).tria
 end
 
  %% eyelink - close the edf file
- newName = ['Interocular_Imbalance', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
+ newName = ['Interocular_Imbalance', global_param.ID, '_', EYE_TEST, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
 [status] = eyelink_close_edf_file(var_eye_link,dummymode,el,window,height, edfFile, newName);
 
  %% Clear screen

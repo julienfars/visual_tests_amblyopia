@@ -21,6 +21,9 @@ function prefix = choosePrefix(EYE_TEST, AMB_EYE)
     else
         prefix = "";
     end
+    if contains(AMB_EYE, EYE_TEST)
+        prefix = prefix + '_AMB';
+    end
 end
 
 function testType = chooseTestType(baseFileName)
@@ -33,6 +36,8 @@ function testType = chooseTestType(baseFileName)
         testType = "_binoc_orientation";
     elseif contains(baseFileName, '_dichoptic')
         testType = "_dichoptic";
+    elseif contains(baseFileName, '_asteroid')
+        testType = '_asteroid';
     elseif contains(baseFileName, '_snellen_e')
         testType = "_snellen_e";
     elseif contains(baseFileName, '_snellen_e_crowded')
@@ -67,6 +72,8 @@ function updateGlobalParams(global_param, baseFileName, mean_reversals, EYE_TEST
         global_param.binoc = mean_reversals;
     elseif contains(baseFileName, '_dichoptic')
         global_param.dichop = mean_reversals;
+    elseif contains(baseFileName, '_asteroid')
+        global_param.asteroid = mean_reversals;
     elseif contains(baseFileName, '_snellen_e')
         updateGlobalParamForLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE);
     elseif contains(baseFileName, '_snellen_e_crowded')

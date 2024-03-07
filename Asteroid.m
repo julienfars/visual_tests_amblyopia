@@ -972,7 +972,7 @@ end
 status = fclose('all');
 
 % eyelink - close the edf file
- newName = ['Asteroid_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
+ newName = ['Asteroid_', global_param.ID, '_', EYE_TEST, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
 [status] = eyelink_close_edf_file(var_eye_link,dummymode,el,window,height, edfFile, newName);
 
 
@@ -1011,7 +1011,7 @@ if global_param.Retest == true
     baseFileName = baseFileName + "_retest_";
 end
 
-[filename, global_param] = results_table(baseFileName, global_param, EYE_TEST, AMB_EYE, []);
+[filename, global_param] = results_table(baseFileName, global_param, EYE_TEST, AMB_EYE, disparity_arcsec);
 
 writetable(struct2table(data),filename)
 

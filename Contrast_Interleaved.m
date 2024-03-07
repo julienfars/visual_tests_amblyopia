@@ -204,7 +204,7 @@ WaitSecs(1);
 
 end
 %% eyelink - close the edf file
- newName = ['Contrast_Interleaved_', global_param.ID, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
+ newName = ['Contrast_Interleaved_', global_param.ID, '_', EYE_TEST, '_',char(datetime('now','TimeZone','local','Format','y_M_d_HH_mm')),'.edf'];                
 [status] = eyelink_close_edf_file(var_eye_link,dummymode,el,window,height, edfFile, newName);
 
  %% Clear screen
