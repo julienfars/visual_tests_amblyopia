@@ -1,15 +1,3 @@
-
-%%% FIX THE MOVING TARGETS!!!
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-
 %% Setup
 sca; % to clean the workspace
 commandwindow; % to open the command window
@@ -107,7 +95,7 @@ nb_table = 1;
 temps = createTable(maxNumTrials, nb_table, ["string", "datetime", "double", "double", "string", "string",...
     "double", "double", "double" "double", "double", "string", "string", "string", "double"], ...
     ["Task", "Date_time", "Trial","Reversal", "AMB_eye", "Eye_tested", "Contrast_low", "Contrast_high",...
-    "Frequency", "Orientation", "Noise", "Position", "Key", "Success", "RT"] ); 
+    "Frequency_dva", "Orientation", "Noise", "Position", "Key", "Success", "RT"] ); 
 
 %% Mean reversals table 
 % the mean reversals table is generated here (optimisation reasons)
@@ -212,7 +200,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     % Wait for a button press
     [rt, value, key, counter_trial, Stim_position] = waitForButtonPress(onsetTime, var_eye_link, leftKey, rightKey, upKey, downKey, escapeKey, spaceKey, skipKey, repeatNoise, ...
         sc, temps, counter_trial, acc_resp, current_test, fixCross, HC1, HC2, att_test); 
-    temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, AMB_EYE, EYE_TEST, contrast_low, contrast_high, propertiesMat(1,2), orientation, NOISE, Stim_position, key, value, rt}; 
+    temps(counter_trial,:) = {current_test, datetime('now'), sc.trialCount, sc.revCount, AMB_EYE, EYE_TEST, contrast_low, contrast_high, propertiesMat(1,2)*gaborDimPix, orientation, NOISE, Stim_position, key, value, rt}; 
     if contains(value, 'ESCAPE')
         mean_reversals = 0;
         break;
@@ -220,7 +208,7 @@ eyelink_start_trial(var_eye_link, sc.trialCount, orientation, [])
     [mrt] = calculateLastSixReversals(sc, temps, mrt, num_training, current_test, [], NOISE, [], [], []);
     if sc.isFinished
         [mean_reversals, success_reversal] = calculateMeanReversals(sc,mrt, maxNumReversals, NOISE, current_test, [], [], []);
-        temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', contrast_low, contrast_high, propertiesMat(1,2), 0, mean_reversals, Stim_position, success_reversal, 'end_of_table', 0};
+        temps(sc.trialCount + 1, :) = {current_test, datetime('now'), sc.trialCount + 1, sc.revCount, 'MEAN', 'REVERSAL', contrast_low, contrast_high, propertiesMat(1,2)*gaborDimPix, 0, mean_reversals, Stim_position, success_reversal, 'end_of_table', 0};
     else 
         mean_reversals = 0;
     end
