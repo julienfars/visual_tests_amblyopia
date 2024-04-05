@@ -27,6 +27,11 @@ global_param.cut_off_AE = '?';
 global_param.cut_off_FE = '?';
 global_param.cut_off_BE = '?';
 
+global_param.cut_off_dva = '?';
+global_param.cut_off_AE_dva = '?';
+global_param.cut_off_FE_dva = '?';
+global_param.cut_off_BE_dva = '?';
+
 %% parameters from the Contrast Interleaved test
 global_param.contrast = '?';
 global_param.contrast_AE = [0.5 0.5 0.5 0.5 0.5 0.5];

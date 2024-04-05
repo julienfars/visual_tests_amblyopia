@@ -185,7 +185,7 @@ end
     [mrt,counter_mrt] = calculateLastSixReversals(staircaseArray(iSC), temps, mrt, num_training, current_test, counter_mrt, freq, contrast, iSC);
 
 if staircaseArray(iSC).isFinished
-    [mean_reversals, success_reversal, mt] = calculateMeanReversals(staircaseArray(iSC),mrt, maxNumReversals, contrast, current_test, iSC, FREQS_test, mt);
+    [mean_reversals, success_reversal, mt] = calculateMeanReversals(staircaseArray(iSC),mrt, maxNumReversals, freq, current_test, iSC, FREQS_test, mt, contrast);
     temps(counter_trial + 1,:) = {current_test, datetime('now'), staircaseArray(iSC).trialCount, staircaseArray(iSC).revCount, 'MEAN', 'REVERSAL', mean_reversals, iSC, propertiesMat(2)*gaborDimPix, orientation, Stim_position, success_reversal, 'end_of_table', 0};
     counter_trial = counter_trial + 1;
 else 

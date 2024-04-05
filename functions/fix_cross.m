@@ -178,11 +178,15 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
                     case contains(AMB_EYE, 'Left') && contains(EYE_TEST, 'Both')
                         buffer_r = 1;
                         buffer_l = 0;
+                        HCa = HC1;
+                        HCb = HC2;
                         contrast_l = 1;
                         contrast_r = 0.6;
                     case contains(AMB_EYE, 'Right') && contains(EYE_TEST, 'Both')
                         buffer_r = 1;
                         buffer_l = 0;
+                        HCa = HC2;
+                        HCb = HC1;
                         contrast_r = 1;
                         contrast_l = 0.6;
                     otherwise
@@ -190,16 +194,16 @@ function [HC1, HC2, FF1w, FF1b, FF2w, FF2b, diff, doubleScreen] = fix_cross(fixC
                  end
                 % Draw the half crosses to the screen
 
-                drawHalfCross(window, black, white, HC1, [], [], buffer_l, contrast_l);
-                drawHalfCross(window, black, white, HC2, [], [], buffer_r, contrast_r);
+                drawHalfCross(window, black, white, HCa, [], [], buffer_l, contrast_l);
+                drawHalfCross(window, black, white, HCb, [], [], buffer_r, contrast_r);
                 
                 % Flip to the screen
                 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
                 if contains(AMB_EYE, 'Left')
-                    diff(:, 1) = HC1(:, 1) - HCl(:, 1);
+                    diff(:, 1) = HCa(:, 1) - HCl(:, 1);
                 else
-                    diff(:, 1) = HC1(:, 1) - HCr(:, 1);
+                    diff(:, 1) = HCb(:, 1) - HCr(:, 1);
                 end
             end
     
