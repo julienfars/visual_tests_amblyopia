@@ -1,4 +1,4 @@
-# Amblyopia Plasticity Study - Battery of Tests 
+# Amblyopia Plasticity Study - Battery of Tests  (Building)
 
 ![Experiment Image](data/icon/eye_icon.png)
 
