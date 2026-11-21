@@ -7,8 +7,10 @@ function [filename, global_param] = results_table(baseFileName, global_param, EY
     extension = '.xls';
     filename = fullfile(folder, getUniqueFileName(baseFileName)+extension);
 
-    % Update global parameters based on test type
-    updateGlobalParams(global_param, baseFileName, mean_reversals, EYE_TEST, AMB_EYE);
+    % Update global parameters based on test type.
+    % NOTE: the returned struct must be captured; MATLAB structs are passed by
+    % value (before v1.1.0 this result was discarded, see CHANGELOG.md).
+    global_param = updateGlobalParams(global_param, baseFileName, mean_reversals, EYE_TEST, AMB_EYE);
 end
 
 function prefix = choosePrefix(EYE_TEST, AMB_EYE)
@@ -38,10 +40,10 @@ function testType = chooseTestType(baseFileName)
         testType = "_dichoptic";
     elseif contains(baseFileName, '_asteroid')
         testType = '_asteroid';
+    elseif contains(baseFileName, '_snellen_e_crowded') % must precede '_snellen_e'
+        testType = "_snellen_e_crowded";
     elseif contains(baseFileName, '_snellen_e')
         testType = "_snellen_e";
-    elseif contains(baseFileName, '_snellen_e_crowded')
-        testType = "_snellen_e_crowded";
     else
         fprintf('Careful, if you received this message and you did not run the asteroid script there might be a mistake in your code\n');
     end
@@ -63,27 +65,27 @@ function uniqueFileName = getUniqueFileName(baseFileName)
     end
 end
 
-function updateGlobalParams(global_param, baseFileName, mean_reversals, EYE_TEST, AMB_EYE)
+function global_param = updateGlobalParams(global_param, baseFileName, mean_reversals, EYE_TEST, AMB_EYE)
     if contains(baseFileName, '_cutoff_freq')
-        updateGlobalParamForCutoff(global_param, mean_reversals, EYE_TEST, AMB_EYE);
+        global_param = updateGlobalParamForCutoff(global_param, mean_reversals, EYE_TEST, AMB_EYE);
     elseif contains(baseFileName, '_contrast_interleaved')
-        updateGlobalParamForContrast(global_param, mean_reversals, EYE_TEST, AMB_EYE);
+        global_param = updateGlobalParamForContrast(global_param, mean_reversals, EYE_TEST, AMB_EYE);
     elseif contains(baseFileName, '_binoc_orientation')
         global_param.binoc = mean_reversals;
     elseif contains(baseFileName, '_dichoptic')
         global_param.dichop = mean_reversals;
     elseif contains(baseFileName, '_asteroid')
         global_param.asteroid = mean_reversals;
+    elseif contains(baseFileName, '_snellen_e_crowded') % must precede '_snellen_e'
+        global_param = updateGlobalParamForCrowdedLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE);
     elseif contains(baseFileName, '_snellen_e')
-        updateGlobalParamForLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE);
-    elseif contains(baseFileName, '_snellen_e_crowded')
-        updateGlobalParamForCrowdedLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE);
+        global_param = updateGlobalParamForLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE);
     else
         fprintf('Careful, if you received this message and you did not run the asteroid script there might be a mistake in your code\n');
     end
 end
 
-function updateGlobalParamForCutoff(global_param, mean_reversals, EYE_TEST, AMB_EYE)
+function global_param = updateGlobalParamForCutoff(global_param, mean_reversals, EYE_TEST, AMB_EYE)
     if contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Left') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Right')
         global_param.cut_off_AE = mean_reversals;
     elseif contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Right') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Left')
@@ -95,7 +97,13 @@ function updateGlobalParamForCutoff(global_param, mean_reversals, EYE_TEST, AMB_
     end
 end
 
-function updateGlobalParamForContrast(global_param, mean_reversals, EYE_TEST, AMB_EYE)
+function global_param = updateGlobalParamForContrast(global_param, mean_reversals, EYE_TEST, AMB_EYE)
+    % The contrast test passes its mean-reversal table (see createMTTable.m).
+    % Store the thresholds as a numeric row vector (one value per frequency,
+    % in staircase order), the format used by the defaults in GetGlobalVariables.m.
+    if istable(mean_reversals)
+        mean_reversals = mean_reversals.MEAN(mean_reversals.Staircase > 0)';
+    end
     if contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Left') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Right')
         global_param.contrast_AE = mean_reversals;
     elseif contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Right') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Left')
@@ -107,7 +115,7 @@ function updateGlobalParamForContrast(global_param, mean_reversals, EYE_TEST, AM
     end
 end
 
-function updateGlobalParamForLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE)
+function global_param = updateGlobalParamForLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE)
     if contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Left') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Right')
         global_param.logMAR_AE = mean_reversals;
     elseif contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Right') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Left')
@@ -119,7 +127,7 @@ function updateGlobalParamForLogMAR(global_param, mean_reversals, EYE_TEST, AMB_
     end
 end
 
-function updateGlobalParamForCrowdedLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE)
+function global_param = updateGlobalParamForCrowdedLogMAR(global_param, mean_reversals, EYE_TEST, AMB_EYE)
     if contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Left') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Right')
         global_param.logMAR_AE_crowded = mean_reversals;
     elseif contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Right') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Left')

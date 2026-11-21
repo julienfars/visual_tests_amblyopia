@@ -1,0 +1,21 @@
+# --- Participant data: never commit ---------------------------------------
+# Each test writes its results here (see README > Output files).
+/data/*.xls
+/data/*.xlsx
+/data/*.mat
+/data/temp/
+# EyeLink copies .edf files to the working directory (repository root)
+/*.edf
+
+# --- MATLAB -----------------------------------------------------------------
+*.asv
+*.m~
+*.autosave
+slprj/
+*.mex*
+
+# --- OS / editors -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

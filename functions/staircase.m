@@ -8,6 +8,8 @@ classdef staircase < handle
 % Use SC.isFinished to find out whether the staircase is finished
 % You can get your data from SC.levels, SC.nTrials, and SC.nCorrect
 % Code downloaded from: https://github.com/alexsbaldwin/MatlabStaircase
+% Licensed under the GNU AGPL-3.0 (see functions/LICENSE-staircase); this copy
+% may be modified from the original for the amblyopia test battery.
 
     properties % properties of a class are like Matlab struct fields
         levels

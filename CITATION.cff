@@ -1,0 +1,123 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "Visual Tests for Amblyopia: Psychophysics Test Battery"
+abstract: >-
+  MATLAB/Psychtoolbox battery of psychophysical tests used to assess visual
+  function before and after dichoptic VR training in a study of visual
+  plasticity in adult amblyopia: cut-off spatial frequency, contrast
+  sensitivity, interocular imbalance, dichoptic noise tolerance, stereoacuity
+  (Asteroid) and tumbling-E acuity (isolated and crowded). Designed for a
+  passive-polarised stereo display (Display++) with optional EyeLink
+  eye tracking.
+authors:
+  - family-names: Fars
+    given-names: Julien
+    orcid: "https://orcid.org/0000-0001-7771-5029"
+    affiliation: University of Oxford
+repository-code: "https://github.com/julienfars/visual_tests_amblyopia"
+license:
+  - MIT
+  - CC-BY-4.0
+keywords:
+  - amblyopia
+  - psychophysics
+  - Psychtoolbox
+  - MATLAB
+  - contrast sensitivity
+  - interocular suppression
+  - stereoacuity
+  - visual acuity
+# Once archived on Zenodo, the DOI will be here (will use the concept DOI, which
+# always resolves to the latest version), plus version/date-released:
+# doi: 10.5281/zenodo.XXXXXXX
+# version: 1.1.0
+# date-released: YYYY-MM-DD
+references:
+  - type: article
+    status: in-preparation
+    title: >-
+      Dichoptic Training Boosts Binocular Vision and Reduces GABA in Adult Amblyopia
+    authors:
+      - family-names: Fars
+        given-names: Julien
+        orcid: "https://orcid.org/0000-0001-7771-5029"
+      - family-names: Starling
+        given-names: L.
+      - family-names: Zhang
+        given-names: J.
+      - family-names: Levi
+        given-names: D. M.
+      - family-names: Breach
+        given-names: L.
+      - family-names: Taylor
+        given-names: S.
+      - family-names: Quijada Leyton
+        given-names: P.
+      - family-names: Latham
+        given-names: W.
+      - family-names: Campbell
+        given-names: J.
+      - family-names: Tailor-Hamblin
+        given-names: V. K.
+      - family-names: Ip
+        given-names: I. B.
+  - type: software
+    title: "alexsbaldwin/MatlabStaircase: v0.9.0"
+    authors:
+      - family-names: Baldwin
+        given-names: Alex S.
+        orcid: "https://orcid.org/0000-0002-3830-6254"
+    doi: 10.5281/zenodo.3266141
+    url: "https://github.com/alexsbaldwin/MatlabStaircase"
+    license: AGPL-3.0
+  - type: article
+    title: >-
+      Stereotest Comparison: Efficacy, Reliability, and Variability of a New
+      Glasses-Free Stereotest
+    authors:
+      - family-names: McCaslin
+        given-names: Alice Grasso
+      - family-names: Vancleef
+        given-names: Kathleen
+      - family-names: Hubert
+        given-names: Luke
+      - family-names: Read
+        given-names: Jenny C. A.
+      - family-names: Port
+        given-names: Nicholas
+    journal: "Translational Vision Science & Technology"
+    year: 2020
+    doi: 10.1167/tvst.9.9.29
+  - type: article
+    title: "Dichoptic De-Masking Learning in Adults With Amblyopia and Its Mechanisms"
+    authors:
+      - family-names: Liu
+        given-names: Xiang-Yun
+      - family-names: Zhang
+        given-names: Jun-Yun
+    journal: "Investigative Ophthalmology & Visual Science"
+    year: 2019
+    doi: 10.1167/iovs.18-26483
+  - type: article
+    title: >-
+      Binocular Imbalance in Amblyopia Depends on Spatial Frequency in
+      Binocular Combination
+    authors:
+      - family-names: Mao
+        given-names: Yu
+      - family-names: Min
+        given-names: Seung Hyun
+      - family-names: Chen
+        given-names: Shijia
+      - family-names: Gong
+        given-names: Ling
+      - family-names: Chen
+        given-names: Hao
+      - family-names: Hess
+        given-names: Robert F.
+      - family-names: Zhou
+        given-names: Jiawei
+    journal: "Investigative Ophthalmology & Visual Science"
+    year: 2020
+    doi: 10.1167/iovs.61.8.7

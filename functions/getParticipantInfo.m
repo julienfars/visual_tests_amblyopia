@@ -87,7 +87,7 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
         global_param.binoc_normal_testing = str2num(answer_additional{2, :});
 
     elseif contains(current_test, 'dichoptic')
-        if isempty(global_param.contrast_AE)
+        if ~isnumeric(global_param.contrast_AE) || numel(global_param.contrast_AE) < 3
             contrast_gabor = '0.5';
         else
             contrast_gabor = num2str(global_param.contrast_AE(3));
@@ -97,18 +97,31 @@ function [SUBJECT, SIZE, DISTANCE, EYE_TEST, AMB_EYE, edfFile, fixCross, FREQS_t
         answer_additional = inputdlg(prompt_additional, 'Additional Parameters', 2, defaults_additional); % Opens dialog window
         NOISE = str2num(answer_additional{1, :}); % starting noise
         CONTRAST = str2double(answer_additional{2, :});
-        % Conditionally set CUTOFF based on the eye and amblyopic status
+        % '-' = use the amblyopic-eye cut-off measured by Cutoff.m: the
+        % dichoptic gratings are shown to the AE at 40% of the AE cut-off
+        % (see Dichoptic.m header and createGratingTexture.m).
         CUTOFF = answer_additional{3, :};
         if contains(CUTOFF, '-')
-            if contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Left') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Right')
-                CUTOFF = global_param.cut_off_AE;
-            elseif contains(EYE_TEST, 'Left') && contains(AMB_EYE, 'Right') || contains(EYE_TEST, 'Right') && contains(AMB_EYE, 'Left')
-                CUTOFF = global_param.cut_off_FE;
-            elseif contains(EYE_TEST, 'Both')
-                CUTOFF = global_param.cut_off_BE;
-            else
-                CUTOFF = global_param.cut_off;
-            end
+            CUTOFF = global_param.cut_off_AE;
         end
+        CUTOFF = toCutoffNumber(CUTOFF);
+    end
+
+    % The contrast test also needs a valid cut-off frequency
+    if contains(current_test, 'contrast_interleaved')
+        CUTOFF = toCutoffNumber(CUTOFF);
+    end
+end
+
+function CUTOFF = toCutoffNumber(CUTOFF)
+    % Convert a typed or stored cut-off value to a number and fail early
+    % (before the screen opens) if it is missing, e.g. Cutoff.m was not run
+    % for this eye and '-' was left in the dialog.
+    if ~isnumeric(CUTOFF)
+        CUTOFF = str2double(CUTOFF);
+    end
+    if isempty(CUTOFF) || ~isscalar(CUTOFF) || isnan(CUTOFF) || CUTOFF <= 0
+        error(['No valid cut-off frequency available. Run Cutoff.m for this ' ...
+               'eye first, or type the cut-off value in the dialog.']);
     end
 end

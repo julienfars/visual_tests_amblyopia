@@ -98,7 +98,7 @@ eyelink_clear_screen(var_eye_link,el)
 %% Basic Grating parameters
 
 [gaborDimPix, PixelPerDeg] = setupBasicGaborParameters(windowRect, global_param.screen_size, global_param.distance, global_param.stim_size, [], current_test);
-[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, str2num(CUTOFF), CONTRAST, global_param.dichop_contrast_high, global_param.dichop_contrast_low);
+[sinetex, phase, freq, tilt, contrast_high, contrast_low] = createGratingTexture(window, gaborDimPix, CUTOFF, CONTRAST, global_param.dichop_contrast_high, global_param.dichop_contrast_low);
 nGabors = 2; % number of gratings on display
 [allRects, propertiesMat] = setupGratingsParameters(xCenter, yCenter, gaborDimPix, nGabors, phase, freq, contrast_high); % we draw the grating already but do not display it (efficient coding)
 Screen('DrawTexture', window, sinetex, [], [], tilt, [], [], [], [], [], [0,1,0,0]);
