@@ -18,12 +18,6 @@ The battery measures, for each eye and binocularly: cut-off spatial frequency,
 contrast sensitivity, interocular imbalance, dichoptic noise tolerance,
 stereoacuity (Asteroid) and tumbling-E visual acuity (isolated and crowded).
 
-> **Version note.** The study data were collected with the code tagged
-> [`v1.0.0-data-collection`](../../tree/v1.0.0-data-collection). Later
-> versions fix bugs found while preparing this archive, notably in how the
-> contrast-sensitivity and interocular-imbalance thresholds are computed. See
-> [CHANGELOG.md](CHANGELOG.md) before reusing the `MEAN` rows of v1.0.0 output files.
-
 ## Related repositories
 
 This repository is one part of the study's code. The other parts are:
