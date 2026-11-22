@@ -16,9 +16,7 @@ authors:
     orcid: "https://orcid.org/0000-0001-7771-5029"
     affiliation: University of Oxford
 repository-code: "https://github.com/julienfars/visual_tests_amblyopia"
-license:
-  - MIT
-  - CC-BY-4.0
+license: MIT
 keywords:
   - amblyopia
   - psychophysics
